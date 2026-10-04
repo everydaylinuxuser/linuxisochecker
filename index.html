@@ -39,6 +39,12 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
 
         /* Dynamic background theme transitions */
+        .site-banner {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
         body {
             transition: background-color 0.7s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -181,6 +187,8 @@
     </style>
 </head>
 <body id="app-body" class="theme-neutral text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 pb-16">
+
+    <img class="site-banner" src="images/banner.jpeg" alt="Linux ISO Checker with a verification dashboard and Linux penguin">
 
     <!-- Header / DownDetector Bar -->
     <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
