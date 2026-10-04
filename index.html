@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux ISO Verifier</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- hash-wasm UMD scripts for ultra-fast WASM/JS streaming multi-gigabyte hashes -->
+    <script src="https://cdn.jsdelivr.net/npm/hash-wasm@4.10.0/dist/sha256.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hash-wasm@4.10.0/dist/sha512.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hash-wasm@4.10.0/dist/sha1.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hash-wasm@4.10.0/dist/md5.umd.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        status: {
+                            neutral: '#0f172a',
+                            success: '#022c22',
+                            failure: '#450a0a',
+                            warning: '#451a03',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'Fira Code', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+        /* Dynamic background theme transitions */
+        body {
+            transition: background-color 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .theme-neutral {
+            background-color: #030712; /* slate-950 */
+        }
+
+        .theme-success {
+            background-color: #022c22; /* deep emerald dark */
+        }
+
+        .theme-failure {
+            background-color: #450a0a; /* deep red dark */
+        }
+
+        body.theme-light {
+            background: radial-gradient(circle at top, rgba(14, 165, 233, 0.08), transparent 34%), linear-gradient(180deg, #f8fafc 0%, #eef4ff 32%, #f8fafc 100%);
+            color: #0f172a;
+        }
+
+        body.theme-light .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            border-color: rgba(148, 163, 184, 0.3);
+            box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08), 0 2px 12px rgba(15, 23, 42, 0.04);
+            backdrop-filter: blur(16px);
+        }
+
+        body.theme-light .text-white,
+        body.theme-light .text-slate-100,
+        body.theme-light .text-slate-200,
+        body.theme-light .text-slate-300,
+        body.theme-light .text-slate-400,
+        body.theme-light .text-slate-500,
+        body.theme-light .text-slate-600 {
+            color: #0f172a !important;
+        }
+
+        body.theme-light .text-slate-400,
+        body.theme-light .text-slate-500,
+        body.theme-light .text-slate-600 {
+            color: #475569 !important;
+        }
+
+        body.theme-light .bg-slate-900,
+        body.theme-light .bg-slate-900\/90,
+        body.theme-light .bg-slate-900\/60,
+        body.theme-light .bg-slate-900\/40,
+        body.theme-light .bg-slate-800,
+        body.theme-light .bg-slate-800\/90,
+        body.theme-light .bg-slate-800\/80,
+        body.theme-light .bg-slate-700,
+        body.theme-light .bg-slate-950,
+        body.theme-light .bg-slate-950\/80 {
+            background-color: rgba(255, 255, 255, 0.78) !important;
+        }
+
+        body.theme-light .border-slate-700,
+        body.theme-light .border-slate-800,
+        body.theme-light .border-slate-800\/80,
+        body.theme-light .border-slate-900 {
+            border-color: rgba(148, 163, 184, 0.55) !important;
+        }
+
+        body.theme-light header {
+            background: rgba(255, 255, 255, 0.82);
+            border-color: rgba(148, 163, 184, 0.45) !important;
+            box-shadow: 0 8px 30px rgba(15, 23, 42, 0.05);
+        }
+
+        body.theme-light .glass-panel-hover:hover {
+            border-color: rgba(14, 165, 233, 0.25);
+            box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+        }
+
+        body.theme-light #theme-toggle {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(241, 245, 249, 0.9));
+            color: #0f172a;
+            border-color: rgba(148, 163, 184, 0.55);
+            box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+        }
+
+        body.theme-light .bg-emerald-500\/10,
+        body.theme-light .bg-cyan-500\/10,
+        body.theme-light .bg-slate-800\/80,
+        body.theme-light .bg-slate-800 {
+            background-color: rgba(255, 255, 255, 0.85) !important;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            transition: all 0.5s ease;
+        }
+
+        .glass-panel-hover:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Success Theme Glow */
+        .theme-success .glass-panel {
+            background: rgba(4, 47, 38, 0.85);
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 50px rgba(16, 185, 129, 0.15);
+        }
+
+        /* Failure Theme Glow */
+        .theme-failure .glass-panel {
+            background: rgba(69, 10, 10, 0.85);
+            border-color: rgba(239, 68, 68, 0.3);
+            box-shadow: 0 0 50px rgba(239, 68, 68, 0.2);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .pulse-subtle {
+            animation: pulseGlow 2.5s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.9; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+    </style>
+</head>
+<body id="app-body" class="theme-neutral text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 pb-16">
+
+    <!-- Header / DownDetector Bar -->
+    <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
+                    <i data-lucide="activity" class="w-6 h-6 animate-pulse"></i>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-lg tracking-tight text-white">Linux ISO Verifier</span>
+                        <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full">Standalone Engine</span>
+                    </div>
+                    <p class="text-xs text-slate-400 hidden sm:block">Zero-Database Linux ISO Integrity Checker</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <button id="theme-toggle" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full border border-slate-700 flex items-center gap-1.5 transition-all" aria-label="Switch theme">
+                    <i id="theme-toggle-icon" data-lucide="moon" class="w-3.5 h-3.5"></i>
+                    <span id="theme-toggle-text">Dark</span>
+                </button>
+                <button id="btn-reset-view" class="hidden text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-full border border-slate-700 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                    <span>Reset View</span>
+                </button>
+                <div class="flex items-center gap-2 text-xs text-slate-300 bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                    <span class="font-mono text-[11px]">WASM Streaming Engine</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-8">
+
+        <!-- Hero / DownDetector Status Banner -->
+        <section id="status-banner" class="glass-panel rounded-3xl p-6 sm:p-10 transition-all duration-700 relative overflow-hidden">
+            <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 relative z-10">
+                <div class="flex items-start sm:items-center gap-6">
+                    <!-- Giant Status Badge (Tick/Cross/Shield) -->
+                    <div id="status-icon-container" class="w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-slate-800/90 border border-slate-700 flex items-center justify-center shrink-0 transition-all duration-500 shadow-2xl">
+                        <i id="status-icon" data-lucide="shield-check" class="w-12 h-12 text-slate-400"></i>
+                    </div>
+
+                    <div>
+                        <div class="flex flex-wrap items-center gap-3 mb-2">
+                            <span id="status-badge" class="px-3.5 py-1 rounded-full text-xs font-bold tracking-widest uppercase bg-slate-800 text-slate-400 border border-slate-700">
+                                ALL SYSTEMS STANDBY
+                            </span>
+                            <span id="status-live-indicator" class="text-xs text-cyan-400 flex items-center gap-1.5 font-mono hidden">
+                                <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                                Streaming Local File Chunks...
+                            </span>
+                        </div>
+                        <h1 id="status-title" class="text-2xl sm:text-4xl font-black text-white tracking-tight leading-tight">
+                            Linux ISO Integrity Monitor
+                        </h1>
+                        <p id="status-subtitle" class="text-sm sm:text-base text-slate-400 mt-1 max-w-2xl leading-relaxed">
+                            Select a Linux distribution ISO image and verify against official SHA-256 / SHA-512 / MD5 hashes to guarantee authentic, corruption-free bootable media.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- DownDetector Down/Up Stats Widget -->
+                <div class="flex lg:flex-col sm:flex-row flex-col gap-4 w-full lg:w-auto border-t lg:border-t-0 border-slate-800 pt-6 lg:pt-0 justify-between">
+                    <div class="flex items-center gap-6 bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80">
+                        <div class="text-left">
+                            <div class="text-[10px] text-slate-500 uppercase tracking-wider font-mono">Stream Speed</div>
+                            <div id="metric-speed" class="text-xl sm:text-2xl font-black font-mono text-emerald-400">0.0 MB/s</div>
+                        </div>
+                        <div class="w-px h-8 bg-slate-800"></div>
+                        <div class="text-left">
+                            <div class="text-[10px] text-slate-500 uppercase tracking-wider font-mono">Process Time</div>
+                            <div id="metric-time" class="text-xl sm:text-2xl font-black font-mono text-cyan-400">00:00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Streaming Progress Area -->
+            <div id="progress-container" class="mt-8 pt-6 border-t border-slate-800/80 hidden">
+                <div class="flex justify-between text-xs font-mono mb-2">
+                    <span id="progress-status-text" class="text-cyan-400 font-semibold">Digesting ISO ArrayBuffers via WASM...</span>
+                    <span id="progress-percent-text" class="text-slate-200 font-bold">0%</span>
+                </div>
+                <div class="w-full bg-slate-900 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-700/80">
+                    <div id="progress-bar" class="bg-gradient-to-r from-emerald-500 via-cyan-400 to-blue-500 h-full rounded-full transition-all duration-100 w-0 shadow-lg"></div>
+                </div>
+                <div class="flex justify-between text-[11px] text-slate-400 font-mono mt-2">
+                    <span id="progress-bytes-text">0 MB / 0 MB</span>
+                    <span id="progress-eta-text">ETA: Calculating...</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Layout: Grid (7 Cols Input / 5 Cols Presets & Feed) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+            <!-- Left Form & Inputs -->
+            <div class="lg:col-span-12 space-y-6">
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <!-- 1. ISO File Picker Card -->
+                    <div class="glass-panel glass-panel-hover rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <div class="p-1.5 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                                    <i data-lucide="disc" class="w-5 h-5"></i>
+                                </div>
+                                <h2 class="font-bold text-white text-base">1. Select Local Linux ISO Image</h2>
+                            </div>
+                            <span class="text-[11px] text-slate-400 font-mono bg-slate-800 px-2.5 py-1 rounded-full border border-slate-700">Client Memory Safe</span>
+                        </div>
+
+                        <div id="iso-dropzone" class="border-2 border-dashed border-slate-700 hover:border-emerald-500/60 rounded-2xl p-6 text-center cursor-pointer bg-slate-900/40 hover:bg-slate-900/80 transition-all group">
+                            <input type="file" id="iso-file-input" class="hidden" accept=".iso,.img,.bin,.raw,.xz,.gz" />
+
+                            <div id="iso-dropzone-empty" class="space-y-3 py-2">
+                                <div class="w-14 h-14 rounded-2xl bg-slate-800 text-emerald-400 group-hover:scale-110 flex items-center justify-center mx-auto transition-transform border border-slate-700 shadow-md">
+                                    <i data-lucide="upload-cloud" class="w-7 h-7"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-medium text-slate-200">Drag & drop ISO file here, or <span class="text-emerald-400 underline font-semibold">browse files</span></p>
+                                    <p class="text-xs text-slate-500 mt-1">Supports Ubuntu, Fedora, Arch, Debian, Mint, Manjaro, openSUSE, etc.</p>
+                                </div>
+                            </div>
+
+                            <!-- Active ISO State -->
+                            <div id="iso-dropzone-loaded" class="hidden flex items-center justify-between bg-slate-800/90 p-4 rounded-xl border border-slate-700 text-left">
+                                <div class="flex items-center gap-3.5 overflow-hidden">
+                                    <div class="p-3 bg-emerald-500/20 text-emerald-400 rounded-xl shrink-0 border border-emerald-500/30">
+                                        <i data-lucide="disc-3" class="w-6 h-6 animate-spin-slow"></i>
+                                    </div>
+                                    <div class="overflow-hidden">
+                                        <p id="iso-file-name" class="font-semibold text-slate-100 text-sm truncate">ubuntu-24.04-desktop-amd64.iso</p>
+                                        <div class="flex items-center gap-3 text-xs text-slate-400 mt-0.5 font-mono">
+                                            <span id="iso-file-size">0 MB</span>
+                                            <span>•</span>
+                                            <span id="iso-file-type">Disk Image</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button id="btn-remove-iso" class="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-colors" title="Remove ISO">
+                                    <i data-lucide="x" class="w-5 h-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Checksum Input Card -->
+                    <div class="glass-panel glass-panel-hover rounded-2xl p-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-2">
+                                <div class="p-1.5 bg-cyan-500/10 text-cyan-400 rounded-lg">
+                                    <i data-lucide="key-round" class="w-5 h-5"></i>
+                                </div>
+                                <h2 class="font-bold text-white text-base">2. Expected Checksum or Manifest File</h2>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label for="algo-select" class="text-xs text-slate-400 font-mono">Algo:</label>
+                                <select id="algo-select" class="bg-slate-800 border border-slate-700 text-xs font-semibold text-slate-200 rounded-lg px-2.5 py-1 focus:outline-none focus:border-cyan-500">
+                                    <option value="auto">Auto-Detect</option>
+                                    <option value="SHA-256">SHA-256</option>
+                                    <option value="SHA-512">SHA-512</option>
+                                    <option value="SHA-1">SHA-1</option>
+                                    <option value="MD5">MD5</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="space-y-4">
+                            <!-- Direct Checksum Input -->
+                            <div>
+                                <div class="flex items-center justify-between text-xs text-slate-400 mb-1.5">
+                                    <span>Paste Vendor Checksum Hash Hex:</span>
+                                    <span id="detected-algo-badge" class="font-mono text-cyan-400 text-[11px] hidden">Auto-Detected: SHA-256</span>
+                                </div>
+                                <div class="relative">
+                                    <input type="text" id="expected-hash-input" placeholder="e.g. 81fae9a4421dd9d8b72e60069e80c759805f4e248231d68307221469e38e6e58" class="w-full bg-slate-900/90 border border-slate-700 focus:border-cyan-500 text-xs sm:text-sm font-mono text-slate-100 placeholder-slate-600 rounded-xl px-4 py-3 outline-none transition-colors pr-10" />
+                                    <button id="btn-clear-hash" class="absolute right-3 top-3 text-slate-500 hover:text-slate-300 hidden">
+                                        <i data-lucide="circle-x" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center gap-4">
+                                <div class="h-px bg-slate-800 flex-1"></div>
+                                <span class="text-[10px] text-slate-500 uppercase tracking-widest font-mono">OR UPLOAD SUM FILE</span>
+                                <div class="h-px bg-slate-800 flex-1"></div>
+                            </div>
+
+                            <!-- Upload Checksum File -->
+                            <div id="checksum-dropzone">
+                                <label for="checksum-file-input" class="w-full bg-slate-900/60 border border-slate-700 hover:border-cyan-500/60 rounded-xl p-4 flex items-center justify-between cursor-pointer transition-all text-slate-300 hover:text-white group">
+                                    <div class="flex items-center gap-3">
+                                        <div class="p-2.5 bg-cyan-500/10 text-cyan-400 rounded-lg group-hover:scale-105 transition-transform border border-cyan-500/20">
+                                            <i data-lucide="file-check-2" class="w-5 h-5"></i>
+                                        </div>
+                                        <div>
+                                            <span id="checksum-file-label-main" class="text-xs sm:text-sm font-semibold text-slate-200 block">Upload Manifest File</span>
+                                            <span id="checksum-file-label-sub" class="text-xs text-slate-500 block">SHA256SUMS, SHA512SUMS, CHECKSUM, .txt</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-xs bg-slate-800 text-cyan-400 font-mono px-3 py-1.5 rounded-lg border border-slate-700 group-hover:border-slate-600">Browse</span>
+                                    <input type="file" id="checksum-file-input" class="hidden" accept=".txt,.sha256,.md5,.sha1,.sha512,.asc,*.*" />
+                                </label>
+                            </div>
+
+                            <!-- Parsed Manifest Dropdown -->
+                            <div id="manifest-picker-container" class="hidden p-3.5 bg-slate-900/90 border border-cyan-500/30 rounded-xl space-y-2">
+                                <div class="flex items-center justify-between text-xs">
+                                    <span class="text-cyan-400 font-medium flex items-center gap-1.5">
+                                        <i data-lucide="list-checks" class="w-4 h-4"></i>
+                                        Found Multiple Hashes in File
+                                    </span>
+                                    <span id="manifest-entry-count" class="text-slate-400 font-mono">0 entries</span>
+                                </div>
+                                <select id="manifest-file-select" class="w-full bg-slate-800 border border-slate-700 text-xs font-mono text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-cyan-500">
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verify Button -->
+                <button id="btn-verify" disabled class="w-full py-4 px-6 rounded-2xl font-bold text-white bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 disabled:opacity-40 disabled:cursor-not-allowed shadow-xl shadow-emerald-950/40 flex items-center justify-center gap-3 transition-all duration-300 text-base">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                    <span>Verify ISO Integrity Now</span>
+                </button>
+            </div>
+
+        <!-- Detailed Inspection Results Table -->
+        <section id="results-section" class="glass-panel rounded-3xl p-6 sm:p-8 hidden">
+            <div class="flex items-center justify-between border-b border-slate-800/80 pb-4 mb-6">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="terminal" class="w-5 h-5 text-cyan-400"></i>
+                    <h2 class="text-lg font-bold text-white">Full Hash Inspection Breakdown</h2>
+                </div>
+                <button id="btn-copy-summary" class="text-xs font-mono bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 transition-all">
+                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                    <span>Copy Full Log</span>
+                </button>
+            </div>
+
+            <!-- Side by Side Hash Comparison -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Calculated Hash -->
+                <div class="p-4 bg-slate-900/90 rounded-2xl border border-slate-800 space-y-2">
+                    <div class="flex items-center justify-between text-xs text-slate-400 font-mono">
+                        <span>LOCAL ISO HASH (<span id="summary-algo-1">SHA-256</span>)</span>
+                        <button id="btn-copy-computed" class="text-emerald-400 hover:underline flex items-center gap-1">
+                            <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                        </button>
+                    </div>
+                    <div id="summary-computed-hash" class="font-mono text-xs text-slate-100 break-all bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                        -
+                    </div>
+                </div>
+
+                <!-- Vendor Expected Hash -->
+                <div class="p-4 bg-slate-900/90 rounded-2xl border border-slate-800 space-y-2">
+                    <div class="flex items-center justify-between text-xs text-slate-400 font-mono">
+                        <span>EXPECTED VENDOR HASH (<span id="summary-algo-2">SHA-256</span>)</span>
+                        <button id="btn-copy-expected" class="text-emerald-400 hover:underline flex items-center gap-1">
+                            <i data-lucide="copy" class="w-3 h-3"></i> Copy
+                        </button>
+                    </div>
+                    <div id="summary-expected-hash" class="font-mono text-xs text-slate-100 break-all bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                        -
+                    </div>
+                </div>
+            </div>
+
+            <!-- Parameters Breakdown Table -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs font-mono border-collapse">
+                    <thead>
+                        <tr class="text-slate-500 border-b border-slate-800">
+                            <th class="py-3 px-3">PARAMETER</th>
+                            <th class="py-3 px-3">INSPECTION VALUE</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800/60 text-slate-300">
+                        <tr>
+                            <td class="py-3 px-3 text-slate-500">ISO Filename</td>
+                            <td id="res-filename" class="py-3 px-3 text-slate-200 font-semibold">-</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-3 text-slate-500">ISO File Size</td>
+                            <td id="res-filesize" class="py-3 px-3">-</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-3 text-slate-500">Algorithm Used</td>
+                            <td id="res-algo" class="py-3 px-3 text-cyan-400 font-bold">-</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-3 text-slate-500">Hashing Duration</td>
+                            <td id="res-time" class="py-3 px-3">-</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-3 text-slate-500">Throughput Speed</td>
+                            <td id="res-speed" class="py-3 px-3 text-emerald-400 font-bold">-</td>
+                        </tr>
+                        <tr>
+                            <td class="py-3 px-3 text-slate-500">Validation Status</td>
+                            <td id="res-status-pill" class="py-3 px-3 font-bold">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 border border-slate-700 text-slate-200 text-xs font-mono px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transition-all transform translate-y-20 opacity-0 z-50">
+        <i id="toast-icon" data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+        <span id="toast-message">Copied to clipboard!</span>
+    </div>
+
+    <script>
+        // DOM Handles
+        const appBody = document.getElementById('app-body');
+        const btnResetView = document.getElementById('btn-reset-view');
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeToggleIcon = document.getElementById('theme-toggle-icon');
+        const themeToggleText = document.getElementById('theme-toggle-text');
+
+        const isoFileInput = document.getElementById('iso-file-input');
+        const isoDropzone = document.getElementById('iso-dropzone');
+        const isoDropzoneEmpty = document.getElementById('iso-dropzone-empty');
+        const isoDropzoneLoaded = document.getElementById('iso-dropzone-loaded');
+        const isoFileName = document.getElementById('iso-file-name');
+        const isoFileSize = document.getElementById('iso-file-size');
+        const isoFileType = document.getElementById('iso-file-type');
+        const btnRemoveIso = document.getElementById('btn-remove-iso');
+
+        const expectedHashInput = document.getElementById('expected-hash-input');
+        const btnClearHash = document.getElementById('btn-clear-hash');
+        const detectedAlgoBadge = document.getElementById('detected-algo-badge');
+        const algoSelect = document.getElementById('algo-select');
+
+        const checksumFileInput = document.getElementById('checksum-file-input');
+        const checksumDropzone = document.getElementById('checksum-dropzone');
+        const checksumFileLabelMain = document.getElementById('checksum-file-label-main');
+        const checksumFileLabelSub = document.getElementById('checksum-file-label-sub');
+        const manifestPickerContainer = document.getElementById('manifest-picker-container');
+        const manifestFileSelect = document.getElementById('manifest-file-select');
+        const manifestEntryCount = document.getElementById('manifest-entry-count');
+
+        const btnVerify = document.getElementById('btn-verify');
+
+        // Status Dashboard Handles
+        const statusBanner = document.getElementById('status-banner');
+        const statusIconContainer = document.getElementById('status-icon-container');
+        const statusIcon = document.getElementById('status-icon');
+        const statusBadge = document.getElementById('status-badge');
+        const statusTitle = document.getElementById('status-title');
+        const statusSubtitle = document.getElementById('status-subtitle');
+        const statusLiveIndicator = document.getElementById('status-live-indicator');
+
+        const metricSpeed = document.getElementById('metric-speed');
+        const metricTime = document.getElementById('metric-time');
+
+        const progressContainer = document.getElementById('progress-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressStatusText = document.getElementById('progress-status-text');
+        const progressPercentText = document.getElementById('progress-percent-text');
+        const progressBytesText = document.getElementById('progress-bytes-text');
+        const progressEtaText = document.getElementById('progress-eta-text');
+
+        // Results Section Handles
+        const resultsSection = document.getElementById('results-section');
+        const summaryAlgo1 = document.getElementById('summary-algo-1');
+        const summaryAlgo2 = document.getElementById('summary-algo-2');
+        const summaryComputedHash = document.getElementById('summary-computed-hash');
+        const summaryExpectedHash = document.getElementById('summary-expected-hash');
+        const resFilename = document.getElementById('res-filename');
+        const resFilesize = document.getElementById('res-filesize');
+        const resAlgo = document.getElementById('res-algo');
+        const resTime = document.getElementById('res-time');
+        const resSpeed = document.getElementById('res-speed');
+        const resStatusPill = document.getElementById('res-status-pill');
+
+        const outageFeedList = document.getElementById('outage-feed-list');
+
+        // App State
+        let selectedIsoFile = null;
+        let parsedManifestEntries = [];
+        let isProcessing = false;
+
+        // Initialize Icons
+        lucide.createIcons();
+
+        let currentTheme = localStorage.getItem('iso-pulse-theme') || 'dark';
+
+        function applyTheme(theme) {
+            currentTheme = theme;
+            const isLight = theme === 'light';
+            document.body.classList.toggle('theme-light', isLight);
+            themeToggleIcon.setAttribute('data-lucide', isLight ? 'sun' : 'moon');
+            themeToggleText.textContent = isLight ? 'Light' : 'Dark';
+            themeToggle.setAttribute('aria-label', isLight ? 'Switch to dark mode' : 'Switch to light mode');
+            localStorage.setItem('iso-pulse-theme', theme);
+            lucide.createIcons();
+        }
+
+        themeToggle.addEventListener('click', () => {
+            applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+        });
+
+        applyTheme(currentTheme);
+
+        // Helpers
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function showToast(message, icon = 'check-circle') {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMessage.textContent = message;
+            toastIcon.setAttribute('data-lucide', icon);
+            lucide.createIcons();
+
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3200);
+        }
+
+        function detectHashAlgorithm(hashStr) {
+            const clean = hashStr.trim().toLowerCase();
+            if (/^[a-f0-9]{32}$/.test(clean)) return 'MD5';
+            if (/^[a-f0-9]{40}$/.test(clean)) return 'SHA-1';
+            if (/^[a-f0-9]{64}$/.test(clean)) return 'SHA-256';
+            if (/^[a-f0-9]{128}$/.test(clean)) return 'SHA-512';
+            return null;
+        }
+
+        // File Handler
+        function handleIsoFile(file) {
+            if (!file) return;
+            selectedIsoFile = file;
+            isoFileName.textContent = file.name;
+            isoFileSize.textContent = formatBytes(file.size);
+            isoFileType.textContent = file.type || 'ISO Image';
+
+            isoDropzoneEmpty.classList.add('hidden');
+            isoDropzoneLoaded.classList.remove('hidden');
+
+            if (parsedManifestEntries.length > 0) {
+                matchIsoWithManifest(file.name);
+            }
+
+            updateVerifyButtonState();
+            resetStatusBanner();
+        }
+
+        btnRemoveIso.addEventListener('click', (e) => {
+            e.stopPropagation();
+            selectedIsoFile = null;
+            isoFileInput.value = '';
+            isoDropzoneEmpty.classList.remove('hidden');
+            isoDropzoneLoaded.classList.add('hidden');
+            updateVerifyButtonState();
+            resetStatusBanner();
+        });
+
+        isoDropzone.addEventListener('click', () => isoFileInput.click());
+        isoFileInput.addEventListener('change', (e) => handleIsoFile(e.target.files[0]));
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            isoDropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                isoDropzone.classList.add('border-emerald-500', 'bg-slate-900/90');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            isoDropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                isoDropzone.classList.remove('border-emerald-500', 'bg-slate-900/90');
+            }, false);
+        });
+
+        isoDropzone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            if (dt.files.length > 0) handleIsoFile(dt.files[0]);
+        });
+
+        // Checksum Dropzone
+        ['dragenter', 'dragover'].forEach(eventName => {
+            checksumDropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                checksumDropzone.classList.add('border-cyan-500');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            checksumDropzone.addEventListener(eventName, (e) => {
+                e.preventDefault();
+                checksumDropzone.classList.remove('border-cyan-500');
+            }, false);
+        });
+
+        checksumDropzone.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            if (e.dataTransfer.files.length > 0) {
+                await processChecksumFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        expectedHashInput.addEventListener('input', () => {
+            const val = expectedHashInput.value.trim();
+            if (val.length > 0) {
+                btnClearHash.classList.remove('hidden');
+                const detected = detectHashAlgorithm(val);
+                if (detected && algoSelect.value === 'auto') {
+                    detectedAlgoBadge.textContent = `Auto-Detected: ${detected}`;
+                    detectedAlgoBadge.classList.remove('hidden');
+                } else {
+                    detectedAlgoBadge.classList.add('hidden');
+                }
+            } else {
+                btnClearHash.classList.add('hidden');
+                detectedAlgoBadge.classList.add('hidden');
+            }
+            updateVerifyButtonState();
+        });
+
+        algoSelect.addEventListener('change', () => {
+            const val = expectedHashInput.value.trim();
+            if (val.length > 0) {
+                const detected = detectHashAlgorithm(val);
+                if (algoSelect.value === 'auto' && detected) {
+                    detectedAlgoBadge.textContent = `Auto-Detected: ${detected}`;
+                    detectedAlgoBadge.classList.remove('hidden');
+                } else {
+                    detectedAlgoBadge.classList.add('hidden');
+                }
+            }
+            updateVerifyButtonState();
+        });
+
+        btnClearHash.addEventListener('click', () => {
+            expectedHashInput.value = '';
+            btnClearHash.classList.add('hidden');
+            detectedAlgoBadge.classList.add('hidden');
+            updateVerifyButtonState();
+        });
+
+        checksumFileInput.addEventListener('change', async (e) => {
+            if (e.target.files.length > 0) {
+                await processChecksumFile(e.target.files[0]);
+            }
+        });
+
+        async function processChecksumFile(file) {
+            try {
+                const text = await file.text();
+                checksumFileLabelMain.textContent = `Loaded: ${file.name}`;
+                checksumFileLabelSub.textContent = `Size: ${formatBytes(file.size)}`;
+                parseChecksumManifest(text);
+                showToast(`Parsed checksum file: ${file.name}`);
+            } catch (err) {
+                showToast('Failed to read checksum file', 'alert-circle');
+            }
+        }
+
+        function parseChecksumManifest(content) {
+            const lines = content.split(/\r?\n/);
+            parsedManifestEntries = [];
+
+            const rawHashMatch = content.trim().match(/^[a-fA-F0-9]{32,128}$/);
+            if (rawHashMatch) {
+                const hash = rawHashMatch[0].toLowerCase();
+                const algo = detectHashAlgorithm(hash) || 'SHA-256';
+                parsedManifestEntries.push({ filename: selectedIsoFile ? selectedIsoFile.name : 'Target ISO', hash, algo });
+            } else {
+                lines.forEach(line => {
+                    const trimmed = line.trim();
+                    if (!trimmed || trimmed.startsWith('#')) return;
+
+                    let hash = '', filename = '';
+                    const bsdMatch = trimmed.match(/^(MD5|SHA1|SHA256|SHA512)\s*\((.+)\)\s*=\s*([a-fA-F0-9]{32,128})$/i);
+                    const stdMatch = trimmed.match(/^([a-fA-F0-9]{32,128})\s+[\*]?(.+)$/);
+
+                    if (bsdMatch) {
+                        filename = bsdMatch[2].trim();
+                        hash = bsdMatch[3].toLowerCase();
+                    } else if (stdMatch) {
+                        hash = stdMatch[1].toLowerCase();
+                        filename = stdMatch[2].trim();
+                    }
+
+                    if (hash) {
+                        const algo = detectHashAlgorithm(hash) || 'SHA-256';
+                        parsedManifestEntries.push({ filename, hash, algo });
+                    }
+                });
+            }
+
+            if (parsedManifestEntries.length > 0) {
+                manifestPickerContainer.classList.remove('hidden');
+                manifestEntryCount.textContent = `${parsedManifestEntries.length} ${parsedManifestEntries.length === 1 ? 'entry' : 'entries'} found`;
+
+                manifestFileSelect.innerHTML = '';
+                parsedManifestEntries.forEach((entry, idx) => {
+                    const opt = document.createElement('option');
+                    opt.value = idx;
+                    opt.textContent = `${entry.filename} (${entry.algo})`;
+                    manifestFileSelect.appendChild(opt);
+                });
+
+                if (selectedIsoFile) {
+                    matchIsoWithManifest(selectedIsoFile.name);
+                } else {
+                    applyManifestEntry(0);
+                }
+            } else {
+                showToast('No valid hash signatures found in file', 'alert-circle');
+            }
+        }
+
+        function matchIsoWithManifest(isoName) {
+            const matchIdx = parsedManifestEntries.findIndex(e => 
+                isoName.toLowerCase().includes(e.filename.toLowerCase()) || 
+                e.filename.toLowerCase().includes(isoName.toLowerCase())
+            );
+
+            if (matchIdx !== -1) {
+                manifestFileSelect.value = matchIdx;
+                applyManifestEntry(matchIdx);
+            } else if (parsedManifestEntries.length > 0) {
+                applyManifestEntry(0);
+            }
+        }
+
+        manifestFileSelect.addEventListener('change', (e) => {
+            applyManifestEntry(parseInt(e.target.value, 10));
+        });
+
+        function applyManifestEntry(index) {
+            const entry = parsedManifestEntries[index];
+            if (entry) {
+                expectedHashInput.value = entry.hash;
+                btnClearHash.classList.remove('hidden');
+                if (algoSelect.value === 'auto') {
+                    detectedAlgoBadge.textContent = `Auto-Detected: ${entry.algo}`;
+                    detectedAlgoBadge.classList.remove('hidden');
+                }
+                updateVerifyButtonState();
+            }
+        }
+
+        // Preset Clicks
+        document.querySelectorAll('.distro-preset-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const algo = btn.getAttribute('data-algo');
+                const hash = btn.getAttribute('data-hash');
+                const name = btn.getAttribute('data-name');
+
+                expectedHashInput.value = hash;
+                algoSelect.value = algo;
+                btnClearHash.classList.remove('hidden');
+                detectedAlgoBadge.textContent = `Preset: ${algo}`;
+                detectedAlgoBadge.classList.remove('hidden');
+
+                showToast(`Loaded preset for ${name}`);
+                updateVerifyButtonState();
+            });
+        });
+
+        function updateVerifyButtonState() {
+            const hasIso = !!selectedIsoFile;
+            const hasHash = expectedHashInput.value.trim().length > 0;
+
+            if (hasIso && hasHash) {
+                btnVerify.disabled = false;
+                btnVerify.classList.remove('opacity-40', 'cursor-not-allowed');
+            } else {
+                btnVerify.disabled = true;
+                btnVerify.classList.add('opacity-40', 'cursor-not-allowed');
+            }
+        }
+
+        // Streaming WASM Calculation Engine
+        async function calculateFileHashStream(file, algorithm, onProgress) {
+            const CHUNK_SIZE = 4 * 1024 * 1024; // 4MB Chunk Slices
+            const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+            const startTime = performance.now();
+
+            let hasher = null;
+
+            if (algorithm === 'SHA-256') {
+                if (typeof hashwasm !== 'undefined' && hashwasm.createSHA256) hasher = await hashwasm.createSHA256();
+                else if (window.createSHA256) hasher = await window.createSHA256();
+            } else if (algorithm === 'SHA-512') {
+                if (typeof hashwasm !== 'undefined' && hashwasm.createSHA512) hasher = await hashwasm.createSHA512();
+                else if (window.createSHA512) hasher = await window.createSHA512();
+            } else if (algorithm === 'SHA-1') {
+                if (typeof hashwasm !== 'undefined' && hashwasm.createSHA1) hasher = await hashwasm.createSHA1();
+                else if (window.createSHA1) hasher = await window.createSHA1();
+            } else if (algorithm === 'MD5') {
+                if (typeof hashwasm !== 'undefined' && hashwasm.createMD5) hasher = await hashwasm.createMD5();
+                else if (window.createMD5) hasher = await window.createMD5();
+            }
+
+            // Fallback for smaller files if WASM library fails to load
+            if (!hasher) {
+                if (file.size < 500 * 1024 * 1024 && algorithm !== 'MD5') {
+                    const cryptoAlgoMap = { 'SHA-1': 'SHA-1', 'SHA-256': 'SHA-256', 'SHA-512': 'SHA-512' };
+                    const webCryptoAlgo = cryptoAlgoMap[algorithm];
+                    if (webCryptoAlgo) {
+                        const buffer = await file.arrayBuffer();
+                        const hashBuffer = await crypto.subtle.digest(webCryptoAlgo, buffer);
+                        const hashArray = Array.from(new Uint8Array(hashBuffer));
+                        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                        const elapsedTime = (performance.now() - startTime) / 1000;
+                        const speedMBps = (file.size / (1024 * 1024)) / (elapsedTime || 0.001);
+                        if (onProgress) onProgress(file.size, file.size, speedMBps, elapsedTime);
+                        return hashHex;
+                    }
+                }
+                throw new Error(`Hasher algorithm for ${algorithm} failed to initialize.`);
+            }
+
+            hasher.init();
+            let bytesProcessed = 0;
+
+            for (let i = 0; i < totalChunks; i++) {
+                const start = i * CHUNK_SIZE;
+                const end = Math.min(start + CHUNK_SIZE, file.size);
+                const chunkBlob = file.slice(start, end);
+                const arrayBuffer = await chunkBlob.arrayBuffer();
+
+                hasher.update(new Uint8Array(arrayBuffer));
+                bytesProcessed += arrayBuffer.byteLength;
+
+                const elapsedTime = (performance.now() - startTime) / 1000;
+                const speedMBps = (bytesProcessed / (1024 * 1024)) / (elapsedTime || 0.001);
+
+                if (onProgress) {
+                    onProgress(bytesProcessed, file.size, speedMBps, elapsedTime);
+                }
+            }
+
+            return hasher.digest();
+        }
+
+        // Execute Verification
+        btnVerify.addEventListener('click', async () => {
+            if (!selectedIsoFile || isProcessing) return;
+
+            const expectedHash = expectedHashInput.value.trim().toLowerCase();
+            let selectedAlgo = algoSelect.value;
+
+            if (selectedAlgo === 'auto') {
+                selectedAlgo = detectHashAlgorithm(expectedHash) || 'SHA-256';
+            }
+
+            isProcessing = true;
+            btnVerify.disabled = true;
+            btnVerify.innerHTML = `<i data-lucide="loader-2" class="w-6 h-6 animate-spin"></i> Hashing ISO Stream...`;
+            lucide.createIcons();
+
+            progressContainer.classList.remove('hidden');
+            resultsSection.classList.add('hidden');
+
+            // Banner hashing state
+            statusBanner.className = "glass-panel rounded-3xl p-6 sm:p-10 transition-all duration-500 border border-blue-500/50 bg-blue-950/20";
+            statusIconContainer.className = "w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-blue-500/20 border border-blue-500/40 flex items-center justify-center shrink-0 text-blue-400 shadow-2xl";
+            statusIcon.setAttribute('data-lucide', 'refresh-cw');
+            statusIcon.classList.add('animate-spin');
+            statusBadge.className = "px-3.5 py-1 rounded-full text-xs font-bold tracking-widest uppercase bg-blue-500/20 text-blue-300 border border-blue-500/30";
+            statusBadge.textContent = "COMPUTING ISO DIGEST";
+            statusLiveIndicator.classList.remove('hidden');
+
+            statusTitle.textContent = "Hashing ISO Stream...";
+            statusSubtitle.textContent = `Streaming binary ArrayBuffer chunks for ${selectedIsoFile.name} through WASM ${selectedAlgo} engine.`;
+            lucide.createIcons();
+
+            const startTime = performance.now();
+
+            try {
+                const computedHash = await calculateFileHashStream(selectedIsoFile, selectedAlgo, (bytesRead, totalBytes, speedMBps, elapsedSecs) => {
+                    const pct = Math.min(100, Math.round((bytesRead / totalBytes) * 100));
+                    progressBar.style.width = `${pct}%`;
+                    progressPercentText.textContent = `${pct}%`;
+                    progressStatusText.textContent = `Processing WASM ${selectedAlgo}...`;
+                    progressBytesText.textContent = `${formatBytes(bytesRead)} / ${formatBytes(totalBytes)}`;
+                    metricSpeed.textContent = `${speedMBps.toFixed(1)} MB/s`;
+                    metricTime.textContent = formatTime(elapsedSecs);
+
+                    const remainingBytes = totalBytes - bytesRead;
+                    const etaSecs = speedMBps > 0 ? (remainingBytes / (1024 * 1024)) / speedMBps : 0;
+                    progressEtaText.textContent = `ETA: ${Math.round(etaSecs)}s`;
+                });
+
+                const endTime = performance.now();
+                const totalElapsedSeconds = (endTime - startTime) / 1000;
+                const avgSpeedMBps = (selectedIsoFile.size / (1024 * 1024)) / totalElapsedSeconds;
+
+                const isMatch = computedHash.toLowerCase() === expectedHash.toLowerCase();
+
+                displayVerificationResult({
+                    isMatch,
+                    computedHash,
+                    expectedHash,
+                    algo: selectedAlgo,
+                    filename: selectedIsoFile.name,
+                    filesize: formatBytes(selectedIsoFile.size),
+                    timeFormatted: `${totalElapsedSeconds.toFixed(2)}s`,
+                    speedFormatted: `${avgSpeedMBps.toFixed(1)} MB/s`
+                });
+
+            } catch (err) {
+                console.error("Hashing Error:", err);
+                displayErrorState(err.message || "An error occurred while computing file checksum.");
+            } finally {
+                isProcessing = false;
+                updateVerifyButtonState();
+                btnVerify.innerHTML = `<i data-lucide="shield-check" class="w-6 h-6"></i> <span>Verify ISO Integrity Now</span>`;
+                lucide.createIcons();
+            }
+        });
+
+        // Display Success or Mismatch Failure
+        function displayVerificationResult(data) {
+            progressContainer.classList.add('hidden');
+            resultsSection.classList.remove('hidden');
+            btnResetView.classList.remove('hidden');
+
+            summaryAlgo1.textContent = data.algo;
+            summaryAlgo2.textContent = data.algo;
+            summaryComputedHash.textContent = data.computedHash;
+            summaryExpectedHash.textContent = data.expectedHash;
+
+            resFilename.textContent = data.filename;
+            resFilesize.textContent = data.filesize;
+            resAlgo.textContent = data.algo;
+            resTime.textContent = data.timeFormatted;
+            resSpeed.textContent = data.speedFormatted;
+
+            metricSpeed.textContent = data.speedFormatted;
+            metricTime.textContent = data.timeFormatted;
+
+            statusLiveIndicator.classList.add('hidden');
+            statusIcon.classList.remove('animate-spin');
+
+            if (data.isMatch) {
+                // SUCCESS STATE (PLEASANT GREEN BG & TICK ICON)
+                appBody.className = `${currentTheme === 'light' ? 'theme-light ' : ''}theme-success text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 pb-16`;
+
+                statusBanner.className = "glass-panel rounded-3xl p-6 sm:p-10 transition-all duration-700 border border-emerald-400/60 pulse-subtle bg-emerald-950/40";
+                statusIconContainer.className = "w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-emerald-500/30 border border-emerald-400/50 flex items-center justify-center shrink-0 text-emerald-300 shadow-2xl scale-105";
+                
+                // Prominent Tick Icon
+                statusIcon.setAttribute('data-lucide', 'check-circle-2');
+                statusBadge.className = "px-3.5 py-1 rounded-full text-xs font-bold tracking-widest uppercase bg-emerald-500/30 text-emerald-200 border border-emerald-400/50";
+                statusBadge.textContent = "✓ ALL SYSTEMS OPERATIONAL / ISO VERIFIED & GENUINE";
+
+                statusTitle.textContent = "Authentic & Valid ISO Image!";
+                statusSubtitle.textContent = `Success: Computed ${data.algo} hash matches vendor specification exactly. The disk image is 100% genuine and safe for USB flashing.`;
+
+                resStatusPill.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 text-xs font-bold"><i data-lucide="check" class="w-4 h-4"></i> VERIFIED MATCH</span>`;
+
+                //addLiveReportEntry(data.filename, true);
+            } else {
+                // FAILURE STATE (VIBRANT RED BG & CROSS ICON)
+                appBody.className = `${currentTheme === 'light' ? 'theme-light ' : ''}theme-failure text-slate-100 min-h-screen font-sans antialiased selection:bg-red-500 selection:text-slate-950 pb-16`;
+
+                statusBanner.className = "glass-panel rounded-3xl p-6 sm:p-10 transition-all duration-700 border border-red-500/60 pulse-subtle bg-red-950/40";
+                statusIconContainer.className = "w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-red-500/30 border border-red-400/50 flex items-center justify-center shrink-0 text-red-300 shadow-2xl scale-105";
+                
+                // Prominent Cross Icon
+                statusIcon.setAttribute('data-lucide', 'x-circle');
+                statusBadge.className = "px-3.5 py-1 rounded-full text-xs font-bold tracking-widest uppercase bg-red-500/30 text-red-200 border border-red-400/50";
+                statusBadge.textContent = "✗ SERVICE DISRUPTION / INTEGRITY FAILURE DETECTED";
+
+                statusTitle.textContent = "Checksum Mismatch Warning!";
+                statusSubtitle.textContent = `Danger: Computed ${data.algo} digest does NOT match vendor expected hash. File may be corrupted, truncated, or tampered with. Do NOT flash this ISO.`;
+
+                resStatusPill.innerHTML = `<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-500/30 text-red-200 border border-red-400/40 text-xs font-bold"><i data-lucide="x" class="w-4 h-4"></i> CHECKSUM MISMATCH</span>`;
+
+                //addLiveReportEntry(data.filename, false);
+            }
+
+            lucide.createIcons();
+            statusBanner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function displayErrorState(errorMessage) {
+            progressContainer.classList.add('hidden');
+            statusLiveIndicator.classList.add('hidden');
+            statusIcon.classList.remove('animate-spin');
+
+            appBody.className = `${currentTheme === 'light' ? 'theme-light ' : ''}theme-failure text-slate-100 min-h-screen font-sans antialiased selection:bg-red-500 selection:text-slate-950 pb-16`;
+
+            statusBanner.className = "glass-panel rounded-3xl p-6 sm:p-10 transition-all duration-500 border border-amber-500/60 bg-amber-950/30";
+            statusIconContainer.className = "w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-amber-500/20 border border-amber-400/40 flex items-center justify-center shrink-0 text-amber-300 shadow-2xl";
+            statusIcon.setAttribute('data-lucide', 'alert-triangle');
+            statusBadge.className = "px-3.5 py-1 rounded-full text-xs font-bold tracking-widest uppercase bg-amber-500/30 text-amber-200 border border-amber-400/40";
+            statusBadge.textContent = "SYSTEM HASHING ERROR";
+
+            statusTitle.textContent = "Error Hashing File";
+            statusSubtitle.textContent = errorMessage;
+
+            lucide.createIcons();
+        }
+
+        // Reset View
+        btnResetView.addEventListener('click', resetStatusBanner);
+
+        function resetStatusBanner() {
+            appBody.className = `${currentTheme === 'light' ? 'theme-light ' : ''}theme-neutral text-slate-100 min-h-screen font-sans antialiased selection:bg-emerald-500 selection:text-slate-950 pb-16`;
+            btnResetView.classList.add('hidden');
+
+            statusBanner.className = "glass-panel rounded-3xl p-6 sm:p-10 transition-all duration-500 border border-slate-800";
+            statusIconContainer.className = "w-20 h-20 sm:w-24 sm:h-24 rounded-3xl bg-slate-800/90 border border-slate-700 flex items-center justify-center shrink-0 text-slate-400 shadow-2xl";
+            statusIcon.setAttribute('data-lucide', 'shield-check');
+            statusIcon.classList.remove('animate-spin');
+            
+            statusBadge.className = "px-3.5 py-1 rounded-full text-xs font-bold tracking-widest uppercase bg-slate-800 text-slate-400 border border-slate-700";
+            statusBadge.textContent = "ALL SYSTEMS STANDBY";
+            statusTitle.textContent = "Linux ISO Integrity Monitor";
+            statusSubtitle.textContent = "Select a Linux distribution ISO image and verify against official SHA-256 / SHA-512 / MD5 hashes to guarantee authentic, corruption-free bootable media.";
+            
+            statusLiveIndicator.classList.add('hidden');
+            progressContainer.classList.add('hidden');
+            resultsSection.classList.add('hidden');
+            metricSpeed.textContent = "0.0 MB/s";
+            metricTime.textContent = "00:00";
+            lucide.createIcons();
+        }
+
+        function addLiveReportEntry(filename, isSuccess) {
+            const entry = document.createElement('div');
+            entry.className = "p-2.5 bg-slate-900/70 rounded-xl border border-slate-800 flex items-center justify-between";
+            const time = "Just now";
+            const truncated = filename.length > 24 ? filename.substring(0, 21) + "..." : filename;
+            
+            if (isSuccess) {
+                entry.innerHTML = `<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-emerald-400"></span><span class="font-semibold text-slate-200">${truncated}</span></div><span class="text-[10px] font-mono text-emerald-400">PASSED (${time})</span>`;
+            } else {
+                entry.innerHTML = `<div class="flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-red-400"></span><span class="font-semibold text-slate-200">${truncated}</span></div><span class="text-[10px] font-mono text-red-400">MISMATCH (${time})</span>`;
+            }
+
+            outageFeedList.prepend(entry);
+            if (outageFeedList.children.length > 5) {
+                outageFeedList.removeChild(outageFeedList.lastChild);
+            }
+        }
+
+        // Copy Clipboard Handlers
+        document.getElementById('btn-copy-computed').addEventListener('click', () => {
+            const val = summaryComputedHash.textContent.trim();
+            if (val && val !== '-') {
+                navigator.clipboard.writeText(val);
+                showToast("Computed hash copied to clipboard!");
+            }
+        });
+
+        document.getElementById('btn-copy-expected').addEventListener('click', () => {
+            const val = summaryExpectedHash.textContent.trim();
+            if (val && val !== '-') {
+                navigator.clipboard.writeText(val);
+                showToast("Expected hash copied to clipboard!");
+            }
+        });
+
+        document.getElementById('btn-copy-summary').addEventListener('click', () => {
+            const log = `ISO PULSE DETECTOR REPORT
+ISO File: ${resFilename.textContent}
+File Size: ${resFilesize.textContent}
+Algorithm: ${resAlgo.textContent}
+Computed Hash: ${summaryComputedHash.textContent}
+Expected Hash: ${summaryExpectedHash.textContent}
+Status: ${statusBadge.textContent}
+Stream Throughput: ${resSpeed.textContent}
+Elapsed Time: ${resTime.textContent}`;
+
+            navigator.clipboard.writeText(log);
+            showToast("Full inspection report copied!");
+        });
+    </script>
+</body>
+</html>
