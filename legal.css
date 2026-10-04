@@ -18,7 +18,9 @@ body {
 .site-banner {
     display: block;
     width: 100%;
+    max-width: 960px;
     height: auto;
+    margin-inline: auto;
 }
 
 a {
@@ -80,6 +82,19 @@ li {
     line-height: 1.75;
 }
 
+.about-intro {
+    display: flow-root;
+}
+
+.about-intro img {
+    float: right;
+    width: 8rem;
+    height: 10rem;
+    margin: 0 0 1rem 1.25rem;
+    border-radius: 0.75rem;
+    object-fit: cover;
+}
+
 ul {
     padding-left: 1.25rem;
 }
@@ -106,5 +121,12 @@ ul {
     @keyframes appear {
         from { opacity: 0; transform: translateY(8px); }
         to { opacity: 1; transform: translateY(0); }
+    }
+}
+
+@media (max-width: 30rem) {
+    .about-intro img {
+        width: 6rem;
+        height: 7.5rem;
     }
 }
