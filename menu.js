@@ -120,6 +120,7 @@ class SiteMenu extends HTMLElement {
                 <a href="verify-iso.html">Why Verify an ISO?</a>
                 <a href="verifycachy.html">How to verify a Cachy OS Download</a>
                 <a href="verifylinuxmint.html">How to verify a Linux Mint Download</a>
+                <a href="verifymxlinux.html">How to verify an MX Linux Download</a>
                 <a href="contact.html">Contact</a>
                 <a href="privacy-policy.html">Privacy Policy</a>
                 <a href="terms.html">Terms of Service</a>
