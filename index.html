@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Linux ISO Checker</title>
+    <script src="menu.js" defer></script>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -194,7 +195,9 @@
 
     <!-- Header / DownDetector Bar -->
     <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-h-16 h-auto py-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <site-menu></site-menu>
+
             <div class="flex items-center gap-3">
                 <div class="p-2 bg-emerald-500/10 text-emerald-400 rounded-xl border border-emerald-500/20">
                     <i data-lucide="activity" class="w-6 h-6 animate-pulse"></i>
@@ -509,6 +512,7 @@
     <footer class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 border-t border-slate-800/80 py-8 text-sm text-slate-400">
         <nav aria-label="Site information" class="flex flex-wrap gap-x-6 gap-y-3">
             <a class="hover:text-emerald-400 transition-colors" href="about.html">About</a>
+            <a class="hover:text-emerald-400 transition-colors" href="verify-iso.html">Why Verify an ISO?</a>
             <a class="hover:text-emerald-400 transition-colors" href="privacy-policy.html">Privacy Policy</a>
             <a class="hover:text-emerald-400 transition-colors" href="terms.html">Terms of Service</a>
             <a class="hover:text-emerald-400 transition-colors" href="contact.html">Contact</a>

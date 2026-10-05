@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Learn why and how to verify Linux distribution ISO downloads with checksums and digital signatures.">
+    <title>Why Verify a Linux ISO? | Linux ISO Checker</title>
+    <link rel="stylesheet" href="legal.css">
+    <script src="menu.js" defer></script>
+</head>
+<body>
+    <img class="site-banner" src="images/banner.jpeg" alt="Linux ISO Checker with a verification dashboard and Linux penguin">
+    <header class="site-header"><a href="index.html">Linux ISO Checker</a><site-menu></site-menu></header>
+    <main>
+        <p class="eyebrow">Download safety</p>
+        <h1>Why verify a Linux ISO?</h1>
+        <p>A Linux ISO is a complete operating-system installer. Before writing it to a USB drive or installing it, check that the file you received matches what its publisher intended. A quick verification can catch a damaged download and, when paired with a trusted signature, help confirm the image is authentic.</p>
+
+        <h2>What can go wrong?</h2>
+        <p>Large downloads can be truncated or altered by storage errors, interrupted transfers, faulty mirrors, or other problems. An image that differs from the published release may fail to boot, cause installation errors, or contain unexpected software. A successful download message only tells you that the transfer completed; it does not prove every byte is correct or trustworthy.</p>
+
+        <h2>What a checksum tells you</h2>
+        <p>A checksum is a short value calculated from a file's contents. Calculate the checksum of your ISO and compare it with the matching value published by the distribution. If they differ, the files differ: do not use that image. Download it again from an official source and verify the new copy.</p>
+        <p>A matching checksum is useful only if the expected value itself is trustworthy. If an attacker can replace both the ISO and the checksum listed beside it, the two may still match. For security-sensitive verification, use the distribution's recommended procedure rather than treating a checksum comparison alone as proof of authenticity.</p>
+
+        <h2>Checksums and signatures work together</h2>
+        <p>Many distributions publish a signed checksum file. A digital signature can establish that the checksum file was signed by someone holding the distribution's signing key and that it has not been changed since it was signed. Verify that signature using the distribution's documented instructions, and obtain or confirm the signing-key fingerprint through an official, trusted channel.</p>
+        <ul>
+            <li>Download the ISO and its checksum file from the distribution's official download page.</li>
+            <li>Follow the distribution's instructions to verify the checksum file's signature, when provided.</li>
+            <li>Compare the ISO's calculated checksum with the value in the verified checksum file.</li>
+            <li>If either check fails, do not install from the image; download it again and investigate before proceeding.</li>
+        </ul>
+
+        <h2>Use a suitable hash algorithm</h2>
+        <p>Prefer SHA-256 or SHA-512 when the distribution provides them. Older algorithms such as MD5 and SHA-1 have known weaknesses and should not be relied on to establish security against a deliberate attacker. Use the algorithm named by the distribution's verification instructions, and compare the complete value carefully.</p>
+
+        <h2>HTTPS is not the whole check</h2>
+        <p>HTTPS helps protect a connection from being read or altered in transit, but it does not independently prove that a file on a website is the genuine release. A compromised website, account, or mirror could still serve an altered image. A verified publisher signature provides a separate check tied to the publisher's signing key.</p>
+
+        <h2>Check your downloaded image</h2>
+        <p>Linux ISO Checker calculates hashes for a local file in your browser so you can compare the result with a value you obtained from the distribution. It does not fetch or certify the expected value, verify a publisher's signature, or decide whether a download source is trustworthy. Follow your distribution's official security guidance for the complete verification process.</p>
+        <p><a href="index.html">Open Linux ISO Checker</a></p>
+    </main>
+    <footer class="site-footer" aria-label="Site information">
+        <a href="about.html">About</a><a href="verify-iso.html">Why Verify an ISO?</a><a href="privacy-policy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="contact.html">Contact</a>
+    </footer>
+</body>
+</html>
