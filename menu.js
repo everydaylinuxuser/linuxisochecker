@@ -66,10 +66,24 @@ class SiteMenu extends HTMLElement {
                     display: grid;
                     width: min(17rem, calc(100vw - 2rem));
                     padding: 0.4rem;
+                    box-sizing: border-box;
                     border: 1px solid #334155;
                     border-radius: 0.5rem;
                     background: #0f172a;
                     box-shadow: 0 16px 32px rgba(0, 0, 0, 0.35);
+                }
+
+                @media (max-width: 40rem) {
+                    nav {
+                        position: fixed;
+                        top: auto;
+                        right: max(1rem, env(safe-area-inset-right));
+                        left: auto;
+                        max-height: calc(100vh - 2rem);
+                        max-height: calc(100dvh - 2rem);
+                        overflow-y: auto;
+                        overscroll-behavior: contain;
+                    }
                 }
 
                 nav a {
@@ -140,6 +154,17 @@ class SiteMenu extends HTMLElement {
         this.navigation.hidden = !open;
         this.button.setAttribute("aria-expanded", String(open));
         this.button.setAttribute("aria-label", `${open ? "Close" : "Open"} navigation menu`);
+
+        if (open && matchMedia("(max-width: 40rem)").matches) {
+            const trigger = this.button.getBoundingClientRect();
+            const menuHeight = this.navigation.getBoundingClientRect().height;
+            const top = trigger.bottom + menuHeight + 16 <= window.innerHeight
+                ? trigger.bottom + 8
+                : Math.max(8, trigger.top - menuHeight - 8);
+            this.navigation.style.top = `${top}px`;
+        } else {
+            this.navigation.style.removeProperty("top");
+        }
     }
 
     onDocumentClick(event) {
