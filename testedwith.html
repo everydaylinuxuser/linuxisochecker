@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Linux distributions tested with Linux ISO Checker.">
+    <title>Tested With... | Linux ISO Checker</title>
+    <link rel="stylesheet" href="legal.css">
+    <script src="menu.js" defer></script>
+    <style>
+        .distro-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .distro-item {
+            display: flex;
+            min-height: 10rem;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            padding: 1.25rem;
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            background: rgba(15, 23, 42, 0.72);
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .distro-item:hover,
+        .distro-item:focus-visible {
+            border-color: #34d399;
+            outline: none;
+        }
+
+        .distro-item img {
+            display: block;
+            width: 4.5rem;
+            height: 4.5rem;
+            object-fit: contain;
+        }
+
+        .distro-item strong {
+            color: #f8fafc;
+            font-size: 1rem;
+        }
+
+        .distro-item span {
+            color: #6ee7b7;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 30rem) {
+            .distro-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 0.75rem;
+            }
+
+            .distro-item {
+                min-height: 8.5rem;
+                padding: 0.9rem 0.5rem;
+            }
+
+            .distro-item img {
+                width: 3.5rem;
+                height: 3.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <img class="site-banner" src="images/banner.jpeg" alt="Linux ISO Checker with a verification dashboard and Linux penguin">
+    <header class="site-header"><a href="index.html">Linux ISO Checker</a><site-menu></site-menu></header>
+    <main>
+        <p class="eyebrow">Compatibility</p>
+        <h1>Tested with...</h1>
+        <p>Linux ISO Checker has been tested with ISO downloads from these distributions. Select a distribution to visit its download site or open its verification guide.</p>
+
+        <div class="distro-grid" aria-label="Linux distributions tested with Linux ISO Checker">
+            <a class="distro-item" href="verifycachy.html">
+                <img src="https://cdn.simpleicons.org/cachyos" alt="" width="72" height="72">
+                <strong>CachyOS</strong>
+                <span>View verification guide</span>
+            </a>
+            <a class="distro-item" href="verifylinuxmint.html">
+                <img src="https://cdn.simpleicons.org/linuxmint" alt="" width="72" height="72">
+                <strong>Linux Mint</strong>
+                <span>View verification guide</span>
+            </a>
+            <a class="distro-item" href="verifymxlinux.html">
+                <img src="https://cdn.simpleicons.org/mxlinux" alt="" width="72" height="72">
+                <strong>MX Linux</strong>
+                <span>View verification guide</span>
+            </a>
+            <a class="distro-item" href="verifypopos.html">
+                <img src="https://cdn.simpleicons.org/popos" alt="" width="72" height="72">
+                <strong>Pop!_OS</strong>
+                <span>View verification guide</span>
+            </a>
+            <a class="distro-item" href="https://fedoraproject.org/">
+                <img src="https://cdn.simpleicons.org/fedora" alt="" width="72" height="72">
+                <strong>Fedora</strong>
+                <span>Visit Fedora</span>
+            </a>
+            <a class="distro-item" href="https://ubuntu-mate.org/">
+                <img src="https://cdn.simpleicons.org/ubuntumate" alt="" width="72" height="72">
+                <strong>Ubuntu MATE</strong>
+                <span>Visit Ubuntu MATE</span>
+            </a>
+        </div>
+    </main>
+    <footer class="site-footer" aria-label="Site information">
+        <a href="about.html">About</a><a href="verify-iso.html">Why Verify an ISO?</a><a href="privacy-policy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="contact.html">Contact</a>
+    </footer>
+</body>
+</html>

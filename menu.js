@@ -117,6 +117,7 @@ class SiteMenu extends HTMLElement {
             <nav id="site-navigation" aria-label="Main navigation" hidden>
                 <a href="index.html">ISO Checker</a>
                 <a href="about.html">About</a>
+                <a href="testedwith.html">Tested With</a>
                 <a href="verify-iso.html">Why Verify an ISO?</a>
                 <a href="verifycachy.html">How to verify a Cachy OS Download</a>
                 <a href="verifylinuxmint.html">How to verify a Linux Mint Download</a>
