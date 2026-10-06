@@ -6,6 +6,7 @@
     <meta name="description" content="Linux distributions tested with Linux ISO Checker.">
     <title>Tested With... | Linux ISO Checker</title>
     <link rel="stylesheet" href="legal.css">
+    <script src="https://unpkg.com/lucide@latest"></script>
     <script src="menu.js" defer></script>
     <style>
         .distro-grid {
@@ -36,11 +37,17 @@
             outline: none;
         }
 
-        .distro-item img {
+        .distro-item img,
+        .distro-item svg {
             display: block;
             width: 4.5rem;
             height: 4.5rem;
             object-fit: contain;
+        }
+
+        .distro-item svg {
+            color: #6ee7b7;
+            stroke-width: 1.5;
         }
 
         .distro-item strong {
@@ -64,7 +71,8 @@
                 padding: 0.9rem 0.5rem;
             }
 
-            .distro-item img {
+            .distro-item img,
+            .distro-item svg {
                 width: 3.5rem;
                 height: 3.5rem;
             }
@@ -80,6 +88,11 @@
         <p>Linux ISO Checker has been tested with ISO downloads from these distributions. Select a distribution to visit its download site or open its verification guide.</p>
 
         <div class="distro-grid" aria-label="Linux distributions tested with Linux ISO Checker">
+            <a class="distro-item" href="verifybazzite.html">
+                <i data-lucide="gamepad-2" aria-hidden="true"></i>
+                <strong>Bazzite</strong>
+                <span>View verification guide</span>
+            </a>
             <a class="distro-item" href="verifycachy.html">
                 <img src="https://cdn.simpleicons.org/cachyos" alt="" width="72" height="72">
                 <strong>CachyOS</strong>
@@ -126,5 +139,6 @@
     <footer class="site-footer" aria-label="Site information">
         <a href="about.html">About</a><a href="verify-iso.html">Why Verify an ISO?</a><a href="privacy-policy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="contact.html">Contact</a>
     </footer>
+    <script>lucide.createIcons();</script>
 </body>
 </html>
