@@ -44,6 +44,17 @@ a:hover {
     color: #a7f3d0;
 }
 
+code {
+    padding: 0.2em 0.4em;
+    border: 1px solid #34d399;
+    border-radius: 0.25rem;
+    background: #064e3b;
+    color: #d1fae5;
+    font: 600 0.9em/1.5 ui-monospace, SFMono-Regular, Consolas, monospace;
+    overflow-wrap: anywhere;
+    box-decoration-break: clone;
+}
+
 .site-header,
 .site-footer,
 main {

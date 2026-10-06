@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="How to verify a Pop!_OS Linux download using checksums and digital signatures.">
+    <title>How to verify a Ubuntu download with the Linux ISO Checker</title>
+    <link rel="stylesheet" href="legal.css">
+    <script src="menu.js" defer></script>
+</head>
+<body>
+    <img class="site-banner" src="images/banner.jpeg" alt="Linux ISO Checker with a verification dashboard and Linux penguin">
+    <header class="site-header"><a href="index.html">Linux ISO Checker</a><site-menu></site-menu></header>
+    <main>
+        <p class="eyebrow">Download safety</p>
+        <h1>How to verify a Ubuntu Linux Download</h1>
+        <img src="images/ubuntudownloadpage.png" alt="Ubuntu Linux download page showing desktop download details" class="instruction-image">
+        <p>Visit <a href="https://ubuntu.com/download/desktop">the official Ubuntu download page</a> to obtain your ISO file.</p>
+        <p>Click on the download link of the version of Ubuntu you want to download. (i.e. Ubuntu 26.04.1)</p>        
+        <img src="images/ubuntuisocheckerbefore.png" alt="Ubuntu Linux ISO Checker" class="instruction-image">        
+        <p>Go to <a href="https://linuxisochecker.com/">the Linux ISO Checker</a> homepage.</p>
+        <p>Click "browse files" or drag the Ubuntu ISO image from your Downloads folder into the "Select Local Linux ISO Image" box.</p>
+        <img src="images/ubuntuchecksum.png" alt="Ubuntu checksum" class="instruction-image">
+        <p>Copy the checksum from the Ubuntu download page for the version you downloaded and paste it into the "Expected Checksum" field.</p>
+        <p><b>Note: Copy just the bit that is the checksum.</b></p>
+        <p>For instance if the Ubuntu download page shows</p><p></p> <code>echo "601e30fbf5d97759367c632e2c33630665039b7e2158fd068403da3ccf1bda1f *ubuntu-26.04.1-desktop-amd64.iso" | shasum -a 256 --check</code></p><p>then you should just copy</p><p><code>601e30fbf5d97759367c632e2c33630665039b7e2158fd068403da3ccf1bda1f</code></p>
+        <p>Click "Verify" to compare the calculated checksum with the expected value.</p>
+        <img src="images/ubuntuisocheckerduring.png" alt="Ubuntu Linux ISO Checker progress" class="instruction-image">
+        <p>Depending on the file size, the verification process may take a minute or two to process.</p>
+        <p>When the process has completed, you will see the results of the verification.</p>
+        <img src="images/ubuntuisocheckerafter.png" alt="Ubuntu Linux ISO Checker results" class="instruction-image">        
+    </main>
+    <footer class="site-footer" aria-label="Site information">
+        <a href="about.html">About</a><a href="verify-iso.html">Why Verify an ISO?</a><a href="privacy-policy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="contact.html">Contact</a>
+    </footer>
+</body>
+</html>
