@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debian Quick-Download & Verification Hub</title>
+    <!-- Lucide Icons for UI elements -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="menu.js" defer></script>
+    <link rel="stylesheet" href="legal.css">
+    <style>
+        :root {
+            --bg-color: #f4f5f7;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --text-muted: #666666;
+            --heading-color: #d70751; /* Classic Debian Red */
+            --accent-color: #2d6197;
+            --accent-hover: #204770;
+            --border-color: #e1e4e8;
+            --code-bg: #f6f8fa;
+            --code-text: #24292e;
+        }
+
+        .dark {
+            --bg-color: #030712; /* Deep Slate Dark */
+            --card-bg: #0f172a;  /* Slate 900 */
+            --text-color: #f1f5f9; /* Slate 100 */
+            --text-muted: #94a3b8; /* Slate 400 */
+            --heading-color: #f43f5e; /* Vibrant Rose Red */
+            --accent-color: #38bdf8; /* Sky Blue */
+            --accent-hover: #0ea5e9;
+            --border-color: #1e293b; /* Slate 800 */
+            --code-bg: #090d16;
+            --code-text: #e2e8f0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-content {
+            text-align: left;
+        }
+
+        header h1 {
+            color: var(--heading-color);
+            margin: 0 0 5px 0;
+            font-size: 1.8rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .theme-toggle-btn {
+            background-color: var(--card-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 8px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .theme-toggle-btn:hover {
+            border-color: var(--accent-color);
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
+            transition: background-color 0.4s ease, border-color 0.4s ease, box-shadow 0.4s ease;
+        }
+
+        h2 {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 8px;
+            margin-top: 0;
+            font-size: 1.25rem;
+        }
+
+        h3 {
+            color: var(--text-color);
+            font-size: 1rem;
+            margin-bottom: 6px;
+        }
+
+        ul {
+            padding-left: 20px;
+            color: var(--text-color);
+        }
+
+        li {
+            margin-bottom: 10px;
+        }
+
+        a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--accent-color);
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin: 5px 5px 5px 0;
+            transition: background-color 0.2s;
+        }
+
+        .dark .btn {
+            color: #030712; /* High contrast text on dark mode accents */
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+            text-decoration: none;
+        }
+
+        .btn-secondary {
+            background-color: var(--border-color);
+            color: var(--text-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--text-muted);
+            color: #ffffff;
+        }
+
+        code {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            border: 1px solid var(--border-color);
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            color: var(--code-text);
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 600px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <img class="site-banner" src="images/banner.jpeg" alt="Linux ISO Checker with a verification dashboard and Linux penguin">
+<p></p>
+<div class="container">
+    <header>
+        <div class="header-content">
+            <h1>Debian Quick-Download Hub</h1>
+            <p>A straight-forward, clutter-free summary for downloading and verifying Debian 13 ("Trixie").</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle theme">
+                <i id="theme-icon" data-lucide="moon" style="width: 16px; height: 16px;"></i>
+                <span id="theme-text">Dark Mode</span>
+            </button>
+            <site-menu></site-menu>
+        </div>
+    </header>
+
+    <!-- Standard Installers -->
+    <div class="card">
+        <h2>1. Standard Installers (64-bit PC / amd64)</h2>
+        <p style="color: var(--text-muted);">Most desktop users want one of these options to perform a clean installation.</p>
+        
+        <div class="grid">
+            <div>
+                <h3>Netinst (Recommended)</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Small image (~600MB). Downloads packages during installation over the internet.</p>
+                <a href="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.7.0-amd64-netinst.iso" class="btn">Download Netinst ISO</a>
+            </div>
+            <div>
+                <h3>Complete DVD-1</h3>
+                <p style="color: var(--text-muted); font-size: 0.9rem;">Larger offline image (~4GB). Contains standard packages so you don't need active internet during setup.</p>
+                <a href="https://cdimage.debian.org/debian-cd/current/amd64/iso-dvd/debian-13.7.0-amd64-DVD-1.iso" class="btn">Download DVD-1 ISO</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Live ISOs -->
+    <div class="card">
+        <h2>2. Live ISOs (Try Before You Install)</h2>
+        <p style="color: var(--text-muted);">Boot directly into a running Debian desktop environment from a USB stick without modifying your hard drive. Includes an installer inside the desktop session.</p>
+        <div style="margin-top: 15px;">
+            <a href="https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/debian-live-13.7.0-amd64-gnome.iso" class="btn btn-secondary">GNOME</a>
+            <a href="https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/debian-live-13.7.0-amd64-kde.iso" class="btn btn-secondary">KDE Plasma</a>
+            <a href="https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/debian-live-13.7.0-amd64-xfce.iso" class="btn btn-secondary">XFCE</a>
+            <a href="https://cdimage.debian.org/debian-cd/current-live/amd64/iso-hybrid/debian-live-13.7.0-amd64-cinnamon.iso" class="btn btn-secondary">Cinnamon</a>
+        </div>
+    </div>
+
+    <!-- Checksums & Verification -->
+    <div class="card">
+        <h2>3. Checksums & Integrity Verification</h2>
+        <p style="color: var(--text-muted);">Always verify your downloaded ISO file to ensure it wasn't corrupted during transfer.</p>
+        
+        <ul>
+            <li><strong>Official Checksum Source:</strong> Get the official cryptographic checksum files directly from the <a href="https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/" target="_blank">Debian CD Image Directory</a> (look for <code>SHA512SUMS</code>).</li>
+        </ul>
+
+        <h3>How to check your download via command line:</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Open your terminal in the folder where you downloaded your ISO and run the matching command:</p>
+        
+        <p><strong>For Linux / macOS:</strong></p>
+        <pre><code>sha512sum debian-13.7.0-amd64-netinst.iso</code></pre>
+
+        <p><strong>For Windows (PowerShell):</strong></p>
+        <pre><code>Get-FileHash -Path "debian-13.7.0-amd64-netinst.iso" -Algorithm SHA512</code></pre>
+        
+        <p style="color: var(--text-muted); font-size: 0.9rem; margin-top: 15px;">Compare the resulting long string of characters against the matching line inside the official <code>SHA512SUMS</code> file. If they match completely, your ISO is safe and intact!</p>
+    </div>
+
+</div>
+
+<script>
+    // Initialize Lucide Icons
+    lucide.createIcons();
+
+    const htmlEl = document.documentElement;
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const themeText = document.getElementById('theme-text');
+
+    // Check saved theme or default to dark
+    const savedTheme = localStorage.getItem('debian-hub-theme') || 'dark';
+    setTheme(savedTheme);
+
+    themeToggleBtn.addEventListener('click', () => {
+        const currentTheme = htmlEl.classList.contains('dark') ? 'dark' : 'light';
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+    });
+
+    function setTheme(theme) {
+        if (theme === 'dark') {
+            htmlEl.classList.add('dark');
+            themeIcon.setAttribute('data-lucide', 'sun');
+            themeText.textContent = 'Light Mode';
+        } else {
+            htmlEl.classList.remove('dark');
+            themeIcon.setAttribute('data-lucide', 'moon');
+            themeText.textContent = 'Dark Mode';
+        }
+        localStorage.setItem('debian-hub-theme', theme);
+        lucide.createIcons();
+    }
+</script>
+
+</body>
+</html>
