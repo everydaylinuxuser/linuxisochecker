@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Distros Tracker</title>
+    <script src="menu.js" defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" me="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar for table container */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.8);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(71, 85, 105, 1);
+        }
+        dialog::backdrop {
+            background: rgba(2, 6, 23, 0.75);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen transition-colors duration-200 dark:bg-slate-950 dark:text-slate-100">
+
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-brand-600/20 text-brand-500 rounded-xl border border-brand-500/30">
+                    <i class="fa-brands fa-linux text-2xl sm:text-3xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-white">DistroTracker</h1>
+                    <p class="text-xs text-slate-400 sm:text-sm">Linux Distributions, Download & Checksum Hub</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div class="flex flex-col gap-0.5 border-l-2 border-brand-500 bg-slate-800/60 px-4 py-2">
+                    <span class="flex items-center gap-1.5 text-xs text-slate-400">
+                        <i class="fa-regular fa-clock" aria-hidden="true"></i>
+                        Last refreshed
+                    </span>
+                    <time class="text-sm font-semibold text-white" datetime="2026-10-10T17:25:55+01:00">10 Oct 2026, 17:25 BST</time>
+                </div>
+                <site-menu></site-menu>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+
+        <!-- Controls Section -->
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center bg-slate-900/60 p-4 rounded-xl border border-slate-800">
+            <!-- Search Bar -->
+            <div class="relative md:col-span-5">
+                <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInput" placeholder="Search distro name or base..." 
+                       class="w-full bg-slate-950 text-slate-200 border border-slate-700/70 focus:border-brand-500 rounded-lg pl-10 pr-4 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500 transition-colors">
+            </div>
+
+            <!-- Architecture / Base Filter -->
+            <div class="md:col-span-4 flex items-center gap-2">
+                <select id="baseFilter" class="w-full bg-slate-950 text-slate-200 border border-slate-700/70 focus:border-brand-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-brand-500">
+                    <option value="ALL">All Base Systems</option>
+                    <option value="Debian">Debian-Based</option>
+                    <option value="Ubuntu">Ubuntu-Based</option>
+                    <option value="Arch">Arch-Based</option>
+                    <option value="Fedora">RedHat / Fedora</option>
+                    <option value="openSUSE">openSUSE</option>
+                </select>
+            </div>
+
+            <!-- Stats Badge -->
+            <div class="md:col-span-3 flex justify-end items-center gap-2 text-xs text-slate-400">
+                <span class="bg-slate-800 border border-slate-700 px-3 py-2 rounded-lg">
+                    Showing <strong id="distroCount" class="text-brand-400">0</strong> Distributions
+                </span>
+            </div>
+        </div>
+
+        <div id="distroTableContainer" class="overflow-x-auto bg-slate-900/70 rounded-xl border border-slate-800 shadow-2xl backdrop-blur-sm">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-800/80 border-b border-slate-700 text-xs uppercase font-semibold text-slate-300 tracking-wider">
+                        <th scope="col" class="py-3.5 px-4 cursor-pointer hover:text-white transition-colors" onclick="sortTable('name')">
+                            <div class="flex items-center gap-1.5">
+                                <span>Distribution</span>
+                                <i class="fa-solid fa-sort text-slate-500 text-2xs"></i>
+                            </div>
+                        </th>
+                        <th scope="col" class="py-3.5 px-4">Base / Desktop</th>
+                        <th scope="col" class="py-3.5 px-4">Official Site</th>
+                        <th scope="col" class="py-3.5 px-4">Download</th>
+                        <th scope="col" class="py-3.5 px-4 text-right">Checksum</th>
+                    </tr>
+                </thead>
+                <tbody id="distroTableBody" class="divide-y divide-slate-800/80 text-sm">
+                    <!-- Dynamic Rows Populated via JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12 bg-slate-900/40 rounded-xl border border-slate-800">
+            <i class="fa-solid fa-magnifying-glass text-4xl text-slate-600 mb-3"></i>
+            <h3 class="text-lg font-medium text-slate-300">No Linux Distributions Found</h3>
+            <p class="text-sm text-slate-500 mt-1">Try adjusting your search filter or system base drop-down.</p>
+        </div>
+
+    </main>
+
+    <footer class="border-t border-slate-800/80 py-6 text-center text-xs text-slate-500 mt-12 bg-slate-950">
+        <p>Download and checksum links are curated and may change.</p>
+        <p class="mt-1">Linux® is the registered trademark of Linus Torvalds in the U.S. and other countries.</p>
+    </footer>
+
+    <dialog id="checksumDialog" aria-labelledby="checksumDialogTitle" aria-describedby="checksumDialogValue"
+            class="m-auto w-[calc(100%-2rem)] max-w-lg rounded-md border border-slate-700 bg-slate-900 p-0 text-slate-100 shadow-2xl">
+        <div class="space-y-4 p-5">
+            <div class="flex items-center justify-between gap-4">
+                <h2 id="checksumDialogTitle" class="text-base font-semibold">SHA256 Checksum</h2>
+                <form method="dialog">
+                    <button type="submit" class="rounded border border-slate-600 px-3 py-1.5 text-sm text-slate-200 hover:bg-slate-800">Close</button>
+                </form>
+            </div>
+            <code id="checksumDialogValue" class="block break-all rounded bg-slate-950 p-3 font-mono text-sm"></code>
+        </div>
+    </dialog>
+
+    <script>
+        /* Distro dataset with website, ISO links, checksums, and tags */
+        const DISTRO_LOGOS = {
+            "Anduin OS": "https://www.anduinos.com/download/project-logo/anduinos_%E6%AF%9B%E7%8E%BB%E7%92%83%E7%AB%8B%E4%BD%93logo-96px.svg",
+            Bazzite: "https://raw.githubusercontent.com/ublue-os/bazzite/main/press_kit/Bazzite_Color.svg",
+            CachyOS: "https://cachyos.org/_astro/logo.DuMERIP6.svg",
+            "Endeavour OS": "https://cdn.simpleicons.org/endeavouros",
+            Manjaro: "https://cdn.simpleicons.org/manjaro",
+            Omarchy: "https://omarchy.org/brand/omarchy-logo.svg",
+            openSUSE: "https://cdn.simpleicons.org/opensuse",
+            "openSUSE Tumbleweed": "https://cdn.simpleicons.org/opensuse",
+            PikaOS: "https://git.pika-os.com/website/pika-branding/raw/branch/main/logos/pika-logo-text.svg",
+            Ubuntu: "https://assets.ubuntu.com/v1/29985a98-ubuntu-logo32.png",
+            "Linux Mint": "https://linuxmint.com/web/img/logo.svg",
+            "MX Linux": "https://cdn.simpleicons.org/mxlinux",
+            "Pop!_OS": "https://cdn.simpleicons.org/popos",
+            "Zorin OS": "https://assets.zorincdn.com/zorin.com/images/home/zorin-os.svg",
+            "Fedora Workstation": "https://fedoraproject.org/assets/images/logos/fedora-logo-official.svg",
+            "Fedora KDE": "https://fedoraproject.org/assets/images/logos/fedora-logo-official.svg"
+        };
+        const BASE_LOGOS = {
+            Arch: "https://archlinux.org/static/archlinux_common_style/favicon.png",
+            Ubuntu: "https://assets.ubuntu.com/v1/29985a98-ubuntu-logo32.png",
+            Debian: "https://cdn.simpleicons.org/debian",
+            openSUSE: "https://cdn.simpleicons.org/opensuse",
+            Fedora: "https://fedoraproject.org/assets/images/logos/fedora-logo-official.svg"
+        };
+        const DOWNLOAD_LABELS = {
+            "MX Linux XFCE": ["XFCE X64", "XFCE AHS X64"]
+        };
+        const CHECKSUM_LABELS = {
+            "MX Linux XFCE": ["XFCE X64 checksum", "XFCE AHS X64 checksum"]
+        };
+        const TOP_50_DISTROS = [
+            {
+                name: "Bazzite GNOME",
+                base: "Fedora",
+                officialUrl: "https://bazzite.gg/",
+                download: "https://download.bazzite.gg/bazzite-gnome-stable-live-amd64.iso",
+                checksum: "https://download.bazzite.gg/bazzite-gnome-stable-live-amd64.iso-CHECKSUM"
+            },
+            {
+                name: "Bazzite KDE",
+                base: "Fedora",
+                officialUrl: "https://bazzite.gg/",
+                download: "https://download.bazzite.gg/bazzite-stable-live-amd64.iso",
+                checksum: "https://download.bazzite.gg/bazzite-stable-live-amd64.iso-CHECKSUM"
+            },
+            {
+                name: "CachyOS",
+                base: "Arch",
+                officialUrl: "https://cachyos.org/",
+                download: "https://cdn77.cachyos.org/ISO/desktop/260809/cachyos-desktop-linux-260809.iso",
+                checksum: "https://cdn77.cachyos.org/ISO/desktop/260809/cachyos-desktop-linux-260809.iso.sha256"
+            },
+            {
+                name: "Linux Mint Cinnamon",
+                base: "Ubuntu",
+                officialUrl: "https://linuxmint.com/",
+                download: "https://linuxmint.com/edition.php?id=326",
+                checksum: "https://mirrors.kernel.org/linuxmint/stable/22.3/sha256sum.txt"
+            },
+            {
+                name: "Linux Mint XFCE",
+                base: "Ubuntu",
+                officialUrl: "https://linuxmint.com/",
+                download: "https://linuxmint.com/edition.php?id=327",
+                checksum: "https://mirrors.kernel.org/linuxmint/stable/22.3/sha256sum.txt"
+            },
+            {
+                name: "Linux Mint MATE",
+                base: "Ubuntu",
+                officialUrl: "https://linuxmint.com/",
+                download: "https://linuxmint.com/edition.php?id=328",
+                checksum: "https://mirrors.kernel.org/linuxmint/stable/22.3/sha256sum.txt"
+            },
+            {
+                name: "Manjaro Cinnamon",
+                base: "Arch",
+                officialUrl: "https://manjaro.org/",
+                download: "https://download.manjaro.org/cinnamon/25.0.3/manjaro-cinnamon-25.0.3-250609-linux612.iso",
+                checksum: "https://download.manjaro.org/cinnamon/25.0.3/manjaro-cinnamon-25.0.3-250609-linux612.iso.sha512"
+            },
+            {
+                name: "Manjaro GNOME",
+                base: "Arch",
+                officialUrl: "https://manjaro.org/",
+                download: "https://download.manjaro.org/gnome/26.1.0/manjaro-gnome-26.1.0-260812-linux71.iso",
+                checksum: "https://download.manjaro.org/gnome/26.1.0/manjaro-gnome-26.1.0-260812-linux71.iso.sha256"
+            },
+            {
+                name: "Manjaro i3 Window Manager",
+                base: "Arch",
+                officialUrl: "https://manjaro.org/",
+                download: "https://download.manjaro.org/i3/25.0.3/manjaro-i3-25.0.3-250609-linux612.iso",
+                checksum: "https://download.manjaro.org/i3/25.0.3/manjaro-i3-25.0.3-250609-linux612.iso.sha512"
+            },
+            {
+                name: "Manjaro KDE Plasma",
+                base: "Arch",
+                officialUrl: "https://manjaro.org/",
+                download: "https://download.manjaro.org/kde/26.1.0/manjaro-kde-26.1.0-260812-linux71.iso",
+                checksum: "https://download.manjaro.org/kde/26.1.0/manjaro-kde-26.1.0-260812-linux71.iso.sha256"
+            },
+            {
+                name: "Manjaro Xfce",
+                base: "Arch",
+                officialUrl: "https://manjaro.org/",
+                download: "https://download.manjaro.org/xfce/26.1.0/manjaro-xfce-26.1.0-260812-linux71.iso",
+                checksum: "https://download.manjaro.org/xfce/26.1.0/manjaro-xfce-26.1.0-260812-linux71.iso.sha256"
+            },
+            {
+                name: "Omarchy",
+                base: "Arch",
+                officialUrl: "https://omarchy.org/",
+                download: "https://iso.omarchy.org/omarchy-4.0.4.iso",
+                checksum: "https://iso.omarchy.org/omarchy-4.0.4.iso.sha256"
+            },
+            {
+                name: "openSUSE Leap",
+                base: "openSUSE",
+                officialUrl: "https://get.opensuse.org/leap",
+                download: "https://download.opensuse.org/distribution/leap/16.0/offline/Leap-16.0-online-installer-x86_64.install.iso",
+                checksum: "https://download.opensuse.org/distribution/leap/16.0/offline/Leap-16.0-online-installer-x86_64.install.iso.sha512"
+            },
+            {
+                name: "openSUSE Tumbleweed",
+                base: "openSUSE",
+                officialUrl: "https://get.opensuse.org/tumbleweed/",
+                download: "https://download.opensuse.org/tumbleweed/iso/openSUSE-Tumbleweed-NET-x86_64-Current.iso",
+                checksum: "https://download.opensuse.org/tumbleweed/iso/openSUSE-Tumbleweed-NET-x86_64-Current.iso.sha256"
+            },
+            {
+                name: "PikaOS COSMIC",
+                base: "Debian",
+                officialUrl: "https://pika-os.com/",
+                download: "https://iso.pika-os.com/PikaOS-Nest-COSMIC-4.0-amd64-v3-26.08.20-4.iso",
+                checksum: "https://iso.pika-os.com/PikaOS-Nest-COSMIC-4.0-amd64-v3-26.08.20-4.md5"
+            },
+            {
+                name: "PikaOS GNOME",
+                base: "Debian",
+                officialUrl: "https://pika-os.com/",
+                download: "https://iso.pika-os.com/PikaOS-Nest-GNOME-4.0-amd64-v3-26.08.20-4.iso",
+                checksum: "https://iso.pika-os.com/PikaOS-Nest-GNOME-4.0-amd64-v3-26.08.20-4.md5"
+            },
+            {
+                name: "PikaOS Hyprland",
+                base: "Debian",
+                officialUrl: "https://pika-os.com/",
+                download: "https://iso.pika-os.com/PikaOS-Nest-Hyprland-4.0-amd64-v3-26.08.20-4.iso",
+                checksum: "https://iso.pika-os.com/PikaOS-Nest-Hyprland-4.0-amd64-v3-26.08.20-4.md5"
+            },
+            {
+                name: "PikaOS KDE Plasma",
+                base: "Debian",
+                officialUrl: "https://pika-os.com/",
+                download: "https://iso.pika-os.com/PikaOS-Nest-KDE-4.0-amd64-v3-26.08.20-4.iso",
+                checksum: "https://iso.pika-os.com/PikaOS-Nest-KDE-4.0-amd64-v3-26.08.20-4.md5"
+            },
+            {
+                name: "PikaOS Niri",
+                base: "Debian",
+                officialUrl: "https://pika-os.com/",
+                download: "https://iso.pika-os.com/PikaOS-Nest-Niri-4.0-amd64-v3-26.08.20-4.iso",
+                checksum: "https://iso.pika-os.com/PikaOS-Nest-Niri-4.0-amd64-v3-26.08.20-4.md5"
+            },
+            {
+                name: "Pop!_OS",
+                base: "Ubuntu",
+                officialUrl: "https://system76.com/download-pop/",
+                download: "https://iso.pop-os.org/24.04/amd64/generic/28/pop-os_24.04_amd64_generic_28.iso",
+                checksum: "8d78e500fc95da765a91cddcf2ab7ba71ce4e7997e4f008456d4d872ee8f8221"
+            },
+            {
+                name: "Zorin OS",
+                base: "Ubuntu",
+                officialUrl: "https://zorin.com/os/",
+                download: "https://mirrors.edge.kernel.org/zorinos-isos/18/Zorin-OS-18.1-Core-64-bit.iso",
+                checksum: "44649b97bd307fc4c8529205d098ebbf98575a1e1ba2ee7d7005b697af1721d5"
+            },
+            {
+                name: "Ubuntu",
+                base: "Ubuntu",
+                officialUrl: "https://ubuntu.com/desktop",
+                download: "https://releases.ubuntu.com/26.04.1/ubuntu-26.04.1-desktop-amd64.iso",
+                checksum: "601e30fbf5d97759367c632e2c33630665039b7e2158fd068403da3ccf1bda1f"
+            },
+            {
+                name: "MX Linux XFCE",
+                base: "Debian",
+                officialUrl: "https://mxlinux.org/",
+                download: [
+                    "https://sourceforge.net/projects/mx-linux/files/Final/Xfce/MX-25.3_Xfce_x64.iso/download",
+                    "https://sourceforge.net/projects/mx-linux/files/Final/Xfce/MX-25.3_Xfce-ahs_x64.iso/download"
+                ],
+                checksum: [
+                    "https://sourceforge.net/projects/mx-linux/files/Final/Xfce/MX-25.3_Xfce_x64.iso.sha256/download",
+                    "https://sourceforge.net/projects/mx-linux/files/Final/Xfce/MX-25.3_Xfce-ahs_x64.iso.sha256/download"
+                ]
+            },
+            {
+                name: "MX Linux KDE",
+                base: "Debian",
+                officialUrl: "https://mxlinux.org/",
+                download: "https://sourceforge.net/projects/mx-linux/files/Final/KDE/MX-25.3_KDE_x64.iso/download",
+                checksum: "https://sourceforge.net/projects/mx-linux/files/Final/KDE/MX-25.3_KDE_x64.iso.sha256/download"
+            },
+            {
+                name: "MX Linux Fluxbox",
+                base: "Debian",
+                officialUrl: "https://mxlinux.org/",
+                download: "https://sourceforge.net/projects/mx-linux/files/Final/Fluxbox/MX-25.3_fluxbox_x64.iso/download",
+                checksum: "https://sourceforge.net/projects/mx-linux/files/Final/Fluxbox/MX-25.3_fluxbox_x64.iso.sha256/download"
+            },
+            {
+                name: "Endeavour OS",
+                base: "Arch",
+                officialUrl: "https://endeavouros.com/",
+                download: "https://endeavouros.com/download/",
+                checksum: "https://endeavouros.com/download/"
+            },
+            {
+                name: "Anduin OS",
+                base: "Ubuntu",
+                officialUrl: "https://www.anduinos.com/",
+                download: "https://www.anduinos.com/thankyou.html?download=amd64",
+                checksum: "https://cf.anduinos.com/AnduinOS-2.0.4-amd64.sha256"
+            },
+            {
+                name: "Fedora Workstation",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org/",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Workstation/x86_64/iso/Fedora-Workstation-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Workstation/x86_64/iso/Fedora-Workstation-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora KDE",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org/",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/KDE/x86_64/iso/Fedora-KDE-Desktop-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/KDE/x86_64/iso/Fedora-KDE-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora Xfce",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Xfce-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora Cinnamon Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Cinnamon-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora MATE+Compiz Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-MATE_Compiz-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora i3 Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-i3-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora LXQt Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-LXQt-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora LXDE Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-LXDE-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora Sugar on a Stick Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-SoaS-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora Sway Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Sway-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora Budgie Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Budgie-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora Miracle Window Manager Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-MiracleWM-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora KDE Plasma Mobile Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-KDE-Mobile-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            },
+            {
+                name: "Fedora COSMIC Spin",
+                base: "Fedora",
+                officialUrl: "https://fedoraproject.org",
+                download: "https://download.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-COSMIC-Live-44-1.7.x86_64.iso",
+                checksum: "https://dl.fedoraproject.org/pub/fedora/linux/releases/44/Spins/x86_64/iso/Fedora-Spins-44-1.7-x86_64-CHECKSUM"
+            }
+        ].sort((left, right) => left.name.localeCompare(right.name));
+
+        function getDistroLogo(name) {
+            if (/^Bazzite\b/i.test(name)) return DISTRO_LOGOS.Bazzite;
+            if (/^Manjaro\b/i.test(name)) return DISTRO_LOGOS.Manjaro;
+            if (/^PikaOS\b/i.test(name)) return DISTRO_LOGOS.PikaOS;
+            if (/linux mint/i.test(name)) return DISTRO_LOGOS["Linux Mint"];
+            if (/mx linux/i.test(name)) return DISTRO_LOGOS["MX Linux"];
+            if (/^Fedora\b/i.test(name)) return DISTRO_LOGOS["Fedora Workstation"];
+            return DISTRO_LOGOS[name] || "";
+        }
+
+        function renderLinkList(value, labels) {
+            const urls = Array.isArray(value) ? value : [value];
+            const linkLabels = Array.isArray(labels) ? labels : urls.map(() => labels);
+            return urls.map((url, index) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${linkLabels[index]}</a>`).join('<br>');
+        }
+
+        function renderDistros() {
+            const tbody = document.getElementById('distroTableBody');
+            if (!tbody) return;
+
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
+            const selectedBase = document.getElementById('baseFilter').value;
+            const filteredDistros = TOP_50_DISTROS.filter((distro) => {
+                const links = [distro.download, distro.checksum].flatMap((value) => Array.isArray(value) ? value : [value]);
+                const searchableText = [distro.name, distro.base, distro.officialUrl, ...links].join(' ').toLowerCase();
+                const matchesSearch = !searchTerm || searchableText.includes(searchTerm);
+                const matchesBase = selectedBase === 'ALL'
+                    || (selectedBase === 'RPM' ? distro.base === 'Fedora' : distro.base === selectedBase);
+                return matchesSearch && matchesBase;
+            });
+
+            tbody.innerHTML = filteredDistros.map((distro) => {
+                const logo = getDistroLogo(distro.name);
+                return `
+                <tr class="hover:bg-slate-800/60 transition-colors">
+                    <td class="py-3 px-4 font-medium text-slate-200">
+                        <div class="flex items-center gap-2">
+                            ${logo ? `<img src="${logo}" alt="" aria-hidden="true" class="h-5 w-5 shrink-0 object-contain">` : ''}
+                            <span>${distro.name}</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-slate-300">
+                        <div class="flex items-center gap-2">
+                            ${BASE_LOGOS[distro.base] ? `<img src="${BASE_LOGOS[distro.base]}" alt="" aria-hidden="true" class="h-5 w-5 shrink-0 object-contain">` : ''}
+                            <span>${distro.base}</span>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-brand-400 hover:text-brand-300 underline">
+                        <a href="${distro.officialUrl}" target="_blank" rel="noopener noreferrer">${distro.name}</a>
+                    </td>
+                    <td class="py-3 px-4 text-brand-400 hover:text-brand-300 underline">
+                        ${renderLinkList(distro.download, DOWNLOAD_LABELS[distro.name] || "Download")}
+                    </td>
+                    <td class="py-3 px-4 text-right text-brand-400 hover:text-brand-300 underline">
+                        ${typeof distro.checksum === "string" && /^[a-f0-9]{64}$/i.test(distro.checksum)
+                            ? `<button type="button" data-distro="${distro.name}" data-checksum="${distro.checksum}" aria-haspopup="dialog" aria-controls="checksumDialog" class="text-brand-400 underline hover:text-brand-300">View</button>`
+                            : renderLinkList(distro.checksum, CHECKSUM_LABELS[distro.name] || "Checksum")}
+                    </td>
+                </tr>
+            `;
+            }).join('');
+
+            document.getElementById('distroCount').textContent = filteredDistros.length;
+            document.getElementById('distroTableContainer').classList.toggle('hidden', filteredDistros.length === 0);
+            document.getElementById('emptyState').classList.toggle('hidden', filteredDistros.length > 0);
+        }
+
+        function copyToClipboard(text, buttonEl) {
+            const input = document.createElement('textarea');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+
+            const icon = buttonEl.querySelector('i');
+            icon.className = 'fa-solid fa-check text-brand-400 text-2xs';
+            setTimeout(() => {
+                icon.className = 'fa-regular fa-copy text-2xs';
+            }, 1500);
+        }
+
+        function showChecksum(distroName, checksum) {
+            document.getElementById('checksumDialogTitle').textContent = `${distroName} SHA256 Checksum`;
+            document.getElementById('checksumDialogValue').textContent = checksum;
+            document.getElementById('checksumDialog').showModal();
+        }
+
+        document.getElementById('searchInput').addEventListener('input', renderDistros);
+        document.getElementById('baseFilter').addEventListener('change', renderDistros);
+        document.getElementById('distroTableBody').addEventListener('click', (event) => {
+            const viewButton = event.target.closest('[data-checksum]');
+            if (viewButton) showChecksum(viewButton.dataset.distro, viewButton.dataset.checksum);
+        });
+        renderDistros();
+
+    </script>
+</body>
+</html>
