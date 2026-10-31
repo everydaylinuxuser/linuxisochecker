@@ -1,9 +1,13 @@
 ---
 name: refreshdistros
-description: "Use when you need to clear the TOP_50_DISTROS table and add Anduin OS, Bazzite GNOME, Bazzite KDE, CachyOS, Endeavour OS, Ubuntu, Linux Mint Cinnamon, Linux Mint XFCE, Linux Mint MATE, Manjaro Cinnamon, Manjaro GNOME, Manjaro i3, Manjaro KDE Plasma, Manjaro Xfce, Omarchy, openSUSE Leap, openSUSE Tumbleweed, PikaOS COSMIC, PikaOS GNOME, PikaOS Hyprland, PikaOS KDE Plasma, PikaOS Niri, Pop!_OS, Zorin OS, MX Linux XFCE, MX Linux KDE, MX Linux Fluxbox, Fedora Workstation, Fedora KDE, and all currently listed Fedora Spins rows with the exact values requested."
+description: "Use when you need to clear the TOP_50_DISTROS table and add Arch, Anduin OS, Bazzite GNOME, Bazzite KDE, CachyOS, Endeavour OS, Ubuntu, Linux Mint Cinnamon, Linux Mint XFCE, Linux Mint MATE, Manjaro Cinnamon, Manjaro GNOME, Manjaro i3, Manjaro KDE Plasma, Manjaro Xfce, Omarchy, openSUSE Leap, openSUSE Tumbleweed, PikaOS COSMIC, PikaOS GNOME, PikaOS Hyprland, PikaOS KDE Plasma, PikaOS Niri, Pop!_OS, Zorin OS, MX Linux XFCE, MX Linux KDE, MX Linux Fluxbox, Fedora Workstation, Fedora KDE, and all currently listed Fedora Spins rows with the exact values requested."
 ---
 
 When asked to refresh, clear the table named `TOP_50_DISTROS` in `top_linux_distros.html`.
+
+Process each distro independently and continue through the full list if an official source cannot be reached, has changed unexpectedly, or does not provide enough information to verify its download and checksum. Append a record to the workspace-root `refresh-distro-log.md` for each blocked distro, including the distro name, official source URL, what failed or was missing, and whether its existing row was retained or omitted. Do not let one blocked distro stop work on later distros. If no distro is blocked, do not create or modify the log.
+
+Limit research for each distro to 30 seconds total, including retries and navigation. Use the best official source available within that budget; if the required data is still unresolved at 30 seconds, immediately log the blocker as above, retain the existing row when present, and move to the next distro. Never wait indefinitely for a page, download, browser action, or command; use short command timeouts and do not repeatedly poll a stalled operation.
 
 After refreshing the table, update the prominent `Last refreshed` timestamp in the page header to the current local date and time, including the timezone. Update both its visible text and its machine-readable ISO 8601 `datetime` value. Stamp the refresh time; do not generate it dynamically when visitors open the page.
 
@@ -12,6 +16,17 @@ Then add these Bazzite rows:
 - `Bazzite KDE`: base `Fedora`, official site `https://bazzite.gg/`, download `https://download.bazzite.gg/bazzite-stable-live-amd64.iso`, checksum `https://download.bazzite.gg/bazzite-stable-live-amd64.iso-CHECKSUM`
 - use the Bazzite logo `https://raw.githubusercontent.com/ublue-os/bazzite/main/press_kit/Bazzite_Color.svg` for both names
 - display direct ISO and checksum links with clean `Download` and `Checksum` labels
+- display direct ISO and checksum links with clean `Download` and `Checksum` labels
+
+Then add this Arch row:
+- name: `Arch`
+- base: `Arch`
+- official site: `https://archlinux.org/`
+- download: find the latest download link for the x86_64 ISO on `https://archlinux.org/download/`
+- checksum: find the matching latest checksum link for that ISO on `https://archlinux.org/download/`
+- display the Arch Linux logo next to the name using `https://archlinux.org/static/archlinux_common_style/favicon.png`
+
+Use the current download and matching checksum links from the official Arch Linux download page; do not use a stale ISO or checksum URL.
 
 Then add this CachyOS row:
 - base: `Arch`

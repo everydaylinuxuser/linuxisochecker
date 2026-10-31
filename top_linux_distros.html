@@ -72,7 +72,7 @@
                         <i class="fa-regular fa-clock" aria-hidden="true"></i>
                         Last refreshed
                     </span>
-                    <time class="text-sm font-semibold text-white" datetime="2026-10-10T17:25:55+01:00">10 Oct 2026, 17:25 BST</time>
+                    <time class="text-sm font-semibold text-white" datetime="2026-10-31T18:47:52+00:00">31 Oct 2026, 18:47 GMT</time>
                 </div>
                 <site-menu></site-menu>
             </div>
@@ -163,6 +163,7 @@
         /* Distro dataset with website, ISO links, checksums, and tags */
         const DISTRO_LOGOS = {
             "Anduin OS": "https://www.anduinos.com/download/project-logo/anduinos_%E6%AF%9B%E7%8E%BB%E7%92%83%E7%AB%8B%E4%BD%93logo-96px.svg",
+            Arch: "https://archlinux.org/static/archlinux_common_style/favicon.png",
             Bazzite: "https://raw.githubusercontent.com/ublue-os/bazzite/main/press_kit/Bazzite_Color.svg",
             CachyOS: "https://cachyos.org/_astro/logo.DuMERIP6.svg",
             "Endeavour OS": "https://cdn.simpleicons.org/endeavouros",
@@ -194,6 +195,13 @@
         };
         const TOP_50_DISTROS = [
             {
+                name: "Arch",
+                base: "Arch",
+                officialUrl: "https://archlinux.org/",
+                download: "https://geo.mirror.pkgbuild.com/iso/2026.10.01/archlinux-2026.10.01-x86_64.iso",
+                checksum: "https://archlinux.org/iso/2026.10.01/sha256sums.txt"
+            },
+            {
                 name: "Bazzite GNOME",
                 base: "Fedora",
                 officialUrl: "https://bazzite.gg/",
@@ -218,21 +226,21 @@
                 name: "Linux Mint Cinnamon",
                 base: "Ubuntu",
                 officialUrl: "https://linuxmint.com/",
-                download: "https://linuxmint.com/edition.php?id=326",
+                download: "https://mirrors.kernel.org/linuxmint/stable/22.3/linuxmint-22.3-cinnamon-64bit.iso",
                 checksum: "https://mirrors.kernel.org/linuxmint/stable/22.3/sha256sum.txt"
             },
             {
                 name: "Linux Mint XFCE",
                 base: "Ubuntu",
                 officialUrl: "https://linuxmint.com/",
-                download: "https://linuxmint.com/edition.php?id=327",
+                download: "https://mirrors.kernel.org/linuxmint/stable/22.3/linuxmint-22.3-xfce-64bit.iso",
                 checksum: "https://mirrors.kernel.org/linuxmint/stable/22.3/sha256sum.txt"
             },
             {
                 name: "Linux Mint MATE",
                 base: "Ubuntu",
                 officialUrl: "https://linuxmint.com/",
-                download: "https://linuxmint.com/edition.php?id=328",
+                download: "https://mirrors.kernel.org/linuxmint/stable/22.3/linuxmint-22.3-mate-64bit.iso",
                 checksum: "https://mirrors.kernel.org/linuxmint/stable/22.3/sha256sum.txt"
             },
             {
@@ -274,8 +282,8 @@
                 name: "Omarchy",
                 base: "Arch",
                 officialUrl: "https://omarchy.org/",
-                download: "https://iso.omarchy.org/omarchy-4.0.4.iso",
-                checksum: "https://iso.omarchy.org/omarchy-4.0.4.iso.sha256"
+                download: "https://iso.omarchy.org/omarchy-4.0.6.iso",
+                checksum: "https://iso.omarchy.org/omarchy-4.0.6.iso.sha256"
             },
             {
                 name: "openSUSE Leap",
@@ -337,7 +345,7 @@
                 name: "Zorin OS",
                 base: "Ubuntu",
                 officialUrl: "https://zorin.com/os/",
-                download: "https://mirrors.edge.kernel.org/zorinos-isos/18/Zorin-OS-18.1-Core-64-bit.iso",
+                download: "https://mirror.webworld.ie/zorinos/18/Zorin-OS-18.1-Core-64-bit.iso",
                 checksum: "44649b97bd307fc4c8529205d098ebbf98575a1e1ba2ee7d7005b697af1721d5"
             },
             {
@@ -378,15 +386,15 @@
                 name: "Endeavour OS",
                 base: "Arch",
                 officialUrl: "https://endeavouros.com/",
-                download: "https://endeavouros.com/download/",
-                checksum: "https://endeavouros.com/download/"
+                download: "https://mirror.rznet.fr/endeavouros/iso/EndeavourOS_Titan-Nova-2026.08.15.iso",
+                checksum: "https://mirror.rznet.fr/endeavouros/iso/EndeavourOS_Titan-Nova-2026.08.15.iso.sha512sum"
             },
             {
                 name: "Anduin OS",
                 base: "Ubuntu",
                 officialUrl: "https://www.anduinos.com/",
-                download: "https://www.anduinos.com/thankyou.html?download=amd64",
-                checksum: "https://cf.anduinos.com/AnduinOS-2.0.4-amd64.sha256"
+                download: "https://cf.anduinos.com/AnduinOS-2.0.5-amd64.iso",
+                checksum: "https://cf.anduinos.com/AnduinOS-2.0.5-amd64.sha256"
             },
             {
                 name: "Fedora Workstation",
